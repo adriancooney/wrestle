@@ -1,0 +1,19 @@
+{
+  "name": "resteasy",
+  "version": "0.1.0",
+  "description": "A REST API testing library.",
+  "main": "index.js",
+  "repository": "",
+  "author": "Adrian Cooney",
+  "license": "BSD",
+  "dependencies": {
+    "request": "latest",
+    "optimist": "latest"    
+  },
+  "devDependencies": {
+    "mocha": "latest"
+  },
+  "bin": {
+    "resteasy": "./bin/resteasy"
+  }
+}

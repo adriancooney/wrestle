@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+/*
+ * resteasy -- A rest API testing suite
+ * 	test - Run the tests
+ */
+var fs = require("fs"),
+	argv = require("optimist").argv;
+
+var command = argv._[0],
+	defaults = {
+		"testDir": "./test"
+	};
+
+switch(command) {
+	case "test":
+		console.log("Testing!");
+	break;
+
+	default:
+		console.log("Help!");
+}
+
+function executeTests() {
+	fs.exists(defaults.testDir, function(exists) {
+		if(exists) {
+			fs.readdir("./test", function() {
+
+			});
+		} else {
+			error("'test' directory does not exist")
+		}
+	});
+}
+
+function error(msg) {
+	throw new Error(msg);
+}
