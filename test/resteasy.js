@@ -77,6 +77,10 @@ describe("resteasy", function() {
 				name: "tom"
 			});
 
+			resteasy.response.schema(404, {
+				error: true
+			});
+
 			resteasy.response.schema({
 				age: [{
 					name: String,
@@ -205,7 +209,8 @@ describe("resteasy", function() {
 		});
 
 		it("should create a test and run it", function() {
-			var a = resteasy.get("/lol", {a : 1}).expect(200, {}, function() {});
+			var a = resteasy.get("/lolfoot", {a : 1}).expect(200, {}, function() {});
+			var a = resteasy.get("/toot").expect(404);
 
 			resteasy.begin();
 		});

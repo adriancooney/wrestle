@@ -202,17 +202,17 @@ resteasy.prototype.run = function() {
 				if(!err) {
 					that.emit("completion", data);
 					that.report.pass(item);
-
-					next(queue);
 				} else {
 					that.emit("failure", err);
-					that.report.fail(item);
+					that.report.fail(item, err);
 				}
+
+				next(queue);
 			})
 
 		} else {
 			//Done
-			that.emit("end");
+			that.emit("end", that.report.compile());
 		}
 	})(this.buffer);
 };
@@ -232,21 +232,24 @@ resteasy.prototype.test = function(test, callback) {
 	var data = this.merge(test.data, requestSchema);
 
 	console.log("Testing: ", test.url, test.type, data, responseSchema);
-	this.httpRequest(test.url, test.type, data, function(response) {
+	this.httpRequest(test.url, test.type, data, function(err, code, response) {
+		//Test the status code, break if they don't match
+		if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), response, code);
+
 		try {
 			var result = that.compare(responseSchema, response);
-		} catch(e) {
-			callback(e, response);
+		} catch(err) {
+			callback(err, response, code);
 		} finally {
 			if(result) {
-				callback(true, response);
+				callback(false, response, code);
 			}
 		}
 	});
 };
 
 resteasy.prototype.httpRequest = function(url, method, data, callback) {
-	callback({
+	callback(null, 200, {
 		a: "beep",
 		b: "boop",
 		age: [{
@@ -372,7 +375,7 @@ resteasy.Report.prototype.fail = function(result) {
 };
 
 resteasy.Report.prototype.compile = function() {
-
+	return this.results;
 };
 
 /**
