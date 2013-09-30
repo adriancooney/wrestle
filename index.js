@@ -2,7 +2,6 @@
 "use strict";
 
 var resteasy = function() {
-	this.schemas = {};
 	this.store = {};
 	this.events = {};
 	this.queue = [];
@@ -11,6 +10,7 @@ var resteasy = function() {
 	this.running = false;
 	this.buffer = [];
 
+	// Test definition API extensions
 	this.response = {};
 	this.response.schema = this.schema.bind(this, "response");
 
@@ -57,7 +57,7 @@ resteasy.prototype.define = function(name, value) {
  * @param  {string} name Variable name
  * @return {*}      The stored value
  */
-resteasy.prototype.get = function(name) {
+resteasy.prototype.retrieve = function(name) {
 	return this.store[name];
 };
 
@@ -102,9 +102,35 @@ resteasy.prototype.schema = function(namespace, _type, _code, _object) {
 	if(!code) code = "*";
 
 	var name = ["schema", namespace, type, code].join("."),
-		val = this.get(name);
+		val = this.retrieve(name);
 
 	return val ? this.define(name, this.merge(val, object)) : this.define(name, object);
+};
+
+/**
+ * Compile a schema given a test
+ * @param  {resteasy.Test} test The test to compile from
+ * @param {String} namespace The namespace to compile from
+ * @return {Object}      The compiled, merged schema
+ */
+resteasy.prototype.compileSchema = function(test, namespace) {
+	var that = this,
+		name = "schema." + namespace + ".",
+		main = {};
+
+	var schemas = [
+		"*.*",
+		test.type + ".*",
+		"*." + test.code,
+		test.type + "." + test.code
+	].forEach(function(schema) {
+		// console.log("Getting schema", name + schema);
+		var value = that.retrieve(name + schema);
+
+		if(value) main = that.merge(main, value);
+	});
+
+	return main;
 };
 
 /**
@@ -172,6 +198,7 @@ resteasy.prototype.run = function() {
 		if(item) {
 			that.emit("start", item);
 			that.test(item, function(err, data) {
+				console.log("Test complete: ", err, data);
 				if(!err) {
 					that.emit("completion", data);
 					that.report.pass(item);
@@ -190,8 +217,40 @@ resteasy.prototype.run = function() {
 	})(this.buffer);
 };
 
-resteasy.prototype.test = function() {
+/**
+ * Main test function
+ * @param  {resteasy.Test}   test     Resteasy test function
+ * @param  {Function} callback Callback (err, response)
+ * @return {null}            
+ */
+resteasy.prototype.test = function(test, callback) {
+	var that = this,
+		requestSchema = this.compileSchema(test, "request"),
+		responseSchema = this.compileSchema(test, "response");
 
+	// Merge the requestSchema with the test.data
+	var data = this.merge(test.data, requestSchema);
+
+	console.log("Testing: ", test.url, test.type, data, responseSchema);
+	this.httpRequest(test.url, test.type, data, function(response) {
+		try {
+			var result = that.compare(responseSchema, response);
+		} catch(e) {
+			callback(e, response);
+		} finally {
+			if(result) {
+				callback(true, response);
+			}
+		}
+	});
+};
+
+resteasy.prototype.httpRequest = function(url, method, data, callback) {
+	callback({
+		a: "fart",
+		b: "boop",
+		age: 12
+	});
 };
 
 /**
@@ -220,7 +279,7 @@ resteasy.prototype.compare = function(schema, object, level) {
 
 					var test = value.every(function(val, i) {
 						if(val.constructor == Object) return that.compare(type, val, _level);
-						else return that.isType(type, val);
+						else return that.isValue(type, val);
 					});
 
 					if(test) {
@@ -232,7 +291,7 @@ resteasy.prototype.compare = function(schema, object, level) {
 				// Maybe we have a schema WITHIN a schema, in that case, do the entire thing again
 				// Other wise, test the type with the value
 				var test = (schemaType.constructor == Object && value.constructor == Object) ? 
-					that.compare(schemaType, value, _level) : that.isType(schemaType, value);
+					that.compare(schemaType, value, _level) : that.isValue(schemaType, value);
 
 				if(test) {
 					//Woop, compared, go again
@@ -259,8 +318,8 @@ resteasy.prototype.compare = function(schema, object, level) {
  * @param  {*}  value The value to test against
  * @return {Boolean}       The test results
  */
-resteasy.prototype.isType = function(type, value) {
-	return (value.constructor == type) || ((type instanceof RegExp) ? type.test : (function() { return false; }))(value);
+resteasy.prototype.isValue = function(type, value) {
+	return (value.constructor == type) || ((type instanceof RegExp) ? type.test : (function() { return false; }))(value) || type == value;
 };
 
 /**
@@ -273,6 +332,22 @@ resteasy.prototype.toTypeString = function(type) {
 	else return "Unknown";
 };
 
+/**
+ * Test definition API
+ */
+resteasy.prototype.all = function(type, url, data) {
+	return (new resteasy.Test(this.queue)).all(type, url, data);
+};
+
+//Function currying
+resteasy.prototype.get = function(url, data) { return this.all("get", url, data); };
+resteasy.prototype.post = function(url, data) { return this.all("post", url, data); };
+resteasy.prototype.put = function(url, data) { return this.all("put", url, data); };
+resteasy.prototype.update = function(url, data) { return this.all("update", url, data); };
+
+/**
+ * Test report class
+ */
 resteasy.Report = function() {
 	this.results = [];
 };
@@ -291,6 +366,75 @@ resteasy.Report.prototype.fail = function(result) {
 
 resteasy.Report.prototype.compile = function() {
 
+};
+
+/**
+ * Test class
+ */
+resteasy.Test = function(queue) {
+	this.queue = queue;
+};
+
+/**
+ * Handle a HTTP method
+ * @param  {String} type The http method
+ * @param  {String} url  The request url
+ * @param  {Object} data The data to pass to the server
+ * @return {self}      
+ */
+resteasy.Test.prototype.all = function(type, url, data) {
+	this.type = type;
+	this.url = url;
+	this.data = data;
+
+	return this;
+};
+
+// Proxying/currying for Test#all
+resteasy.Test.prototype.get = function(url, data) { return this.all("get", url, data); };
+resteasy.Test.prototype.post = function(url, data) { return this.all("post", url, data); };
+resteasy.Test.prototype.put = function(url, data) { return this.all("put", url, data); };
+resteasy.Test.prototype.delete = function(url, data) { return this.all("delete", url, data); };
+
+/**
+ * Test expectation parameters
+ * 	Usage:
+ * 		expect(200)
+ * 		expect(200, {})
+ * 		expect(200, {}, function() {})
+ *   	expect(200, function() {})
+ *   	expect({})
+ *   	expect({}, function() {})
+ *   	expect(function() {})
+ * 
+ * @param  {Number} code     The HTTP status code
+ * @param  {Object} schema   The object schema the response has to adhere to
+ * @param  {Function} callback The callback
+ * @return {[type]}           [description]
+ */
+resteasy.Test.prototype.expect = function(_code, _schema, _callback) {
+	var code = _code, schema = _schema, callback = _callback;
+
+	if(typeof _code == "object") schema = _code, callback = _schema;
+	if(typeof _schema == "function") callback = _schema;
+	if(typeof _code == "function") callback = _code;
+
+	this.code = (typeof code == "number") ? code : undefined;
+	this.schema = (typeof schema == "object") ? schema : undefined;
+	this.callback = (typeof callback == "function") ? callback : undefined;
+
+	return this.compile();
+};
+
+/**
+ * Compile the Test
+ * @return {self} 
+ */
+resteasy.Test.prototype.compile = function() {
+	//Add self to the queue
+	this.queue.push(this);
+
+	return this;
 };
 
 exports.resteasy = new resteasy;

@@ -9,13 +9,13 @@ describe("resteasy", function() {
 		});
 	});
 
-	describe("#get", function() {
-		it("should create get an existing variable", function() {
-			assert.equal(resteasy.get("name"), "adrian");
+	describe("#retrieve", function() {
+		it("should create retrieve an existing variable", function() {
+			assert.equal(resteasy.retrieve("name"), "adrian");
 		});
 
-		it("should get an undefined variable", function() {
-			assert.equal(resteasy.get("unknown"), undefined);
+		it("should retrieve an undefined variable", function() {
+			assert.equal(resteasy.retrieve("unknown"), undefined);
 		});
 	});
 
@@ -50,11 +50,11 @@ describe("resteasy", function() {
 
 		it("should merge two schema's matching the same parameters", function() {
 			resteasy.schema("response", {
-				a: 1
+				a: String
 			});
 
 			resteasy.schema("response", {
-				b: 2
+				b: String
 			});
 		});
 	});
@@ -65,6 +65,27 @@ describe("resteasy", function() {
 				success: true
 			});
 		})
+	});
+
+	describe("#compileSchema", function() {
+		it("should return a compiled schema for a specific test", function() {
+			resteasy.response.schema("post", 200, {
+				success: true
+			});
+
+			resteasy.response.schema(200, {
+				name: "tom"
+			});
+
+			resteasy.response.schema({
+				age: Number
+			});
+
+			var schema = resteasy.compileSchema({
+				code: 200,
+				type: "post"
+			}, "response");
+		});
 	});
 
 	describe("#compare", function() {
@@ -162,12 +183,26 @@ describe("resteasy", function() {
 
 	describe("#isType", function() {
 		it("should match types", function() {
-			assert.equal(resteasy.isType(String, "string"), true);
-			assert.equal(resteasy.isType(Array, []), true);
-			assert.equal(resteasy.isType(Object, {}), true);
-			assert.equal(resteasy.isType(Boolean, true), true);
-			assert.equal(resteasy.isType(Number, 1), true);
-			assert.equal(resteasy.isType(Boolean, 1), false);
+			assert.equal(resteasy.isValue(String, "string"), true);
+			assert.equal(resteasy.isValue(Array, []), true);
+			assert.equal(resteasy.isValue(Object, {}), true);
+			assert.equal(resteasy.isValue(Boolean, true), true);
+			assert.equal(resteasy.isValue(Number, 1), true);
+			assert.equal(resteasy.isValue(Boolean, 1), false);
 		})
+	});
+
+	describe("Test Definition API", function() {
+		it("should create a new test and add to the queue", function() {
+			var a = resteasy.post("/lol", {a : 1}).expect({}, function() {});
+
+			assert(resteasy.queue[0]);
+		});
+
+		it("should create a test and run it", function() {
+			var a = resteasy.get("/lol", {a : 1}).expect(200, {}, function() {});
+
+			resteasy.begin();
+		});
 	});
 });
