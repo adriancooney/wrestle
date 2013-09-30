@@ -247,9 +247,14 @@ resteasy.prototype.test = function(test, callback) {
 
 resteasy.prototype.httpRequest = function(url, method, data, callback) {
 	callback({
-		a: "fart",
+		a: "beep",
 		b: "boop",
-		age: 12
+		age: [{
+			name: "Tom",
+			friends: [{
+				name: "lol"
+			}]
+		}]
 	});
 };
 
@@ -319,7 +324,9 @@ resteasy.prototype.compare = function(schema, object, level) {
  * @return {Boolean}       The test results
  */
 resteasy.prototype.isValue = function(type, value) {
-	return (value.constructor == type) || ((type instanceof RegExp) ? type.test : (function() { return false; }))(value) || type == value;
+	return (value.constructor == type) 
+		|| ((type instanceof RegExp) ? (function() { return type.test(value) }) : (function() { return false; }))() 
+		|| type == value;
 };
 
 /**

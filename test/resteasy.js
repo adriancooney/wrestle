@@ -78,7 +78,12 @@ describe("resteasy", function() {
 			});
 
 			resteasy.response.schema({
-				age: Number
+				age: [{
+					name: String,
+					friends: [{
+						name: /.*/
+					}]
+				}]
 			});
 
 			var schema = resteasy.compileSchema({
