@@ -28,6 +28,8 @@ resteasy.prototype.addEventListener = function(name, callback) {
 	else this.events[name] = callback;
 };
 
+resteasy.prototype.on = resteasy.prototype.addEventListener;
+
 /**
  * Emit an event on the resteasy object
  * @param  {string} name Event Name
@@ -124,7 +126,6 @@ resteasy.prototype.compileSchema = function(test, namespace) {
 		"*." + test.code,
 		test.type + "." + test.code
 	].forEach(function(schema) {
-		// console.log("Getting schema", name + schema);
 		var value = that.retrieve(name + schema);
 
 		if(value) main = that.merge(main, value);
@@ -157,6 +158,51 @@ resteasy.prototype.toURL = function(base, parameters) {
 	}).join("&");
 };
 
+/**
+ * Convert an object to a queryString
+ * Example input:
+ * 	resteasy.queryString({
+ * 		a: 1, 
+ * 		b: {
+ * 			r: [2, 3, 1, 2],
+ * 			t: "hello",
+ * 			f: { 
+ * 				g: "lol"
+ * 			}
+ * 		}
+ * 	});
+ * 	
+ * 	Output: a=1&b[r][0]=2&b[r][1]=3&b[r][2]=1&b[r][3]=2&b[t]=hello&b[f][g]=lol
+ * 	
+ * @param  {Object} object      Object with key values
+ * @param  {String} parent      @private
+ * @param  {String} queryString @private, for recursion
+ * @return {String}             The query string
+ */
+resteasy.prototype.queryString = function(object, parent, queryString) {
+	queryString = queryString || "";
+	var that = this;
+	return (function next(keys) {
+		var key = keys.shift();
+
+		if(key) {
+			var value = object[key],
+				_parent = parent ? (parent + "[" + key + "]") : key;
+
+			if(value.constructor == Object) queryString = that.queryString(value, _parent, queryString);
+			else {
+				if(Array.isArray(value)) queryString += value.map(function(value, i) { return _parent + "[" + i + "]=" + encodeURIComponent(value); }).join("&") + "&"; //Little hack for the .slice
+				else queryString += _parent + "=" + encodeURIComponent(value) + "&";
+			}
+
+			return next(keys);
+		} else {
+			if(!parent) queryString = queryString.slice(0, -1);
+			return queryString;
+		}
+	})(Object.keys(object));
+};
+
 /*
  * Suite tools
  */
@@ -168,6 +214,7 @@ resteasy.prototype.toURL = function(base, parameters) {
 resteasy.prototype.begin = function() {
 	this.buffer = this.queue.slice(0);
 	this.report = new resteasy.Report;
+	this.count = 0;
 
 	this.emit("begin");
 	this.run();
@@ -193,20 +240,25 @@ resteasy.prototype.run = function() {
 	(function next(queue) {
 		if(!that.running) return;
 
-		var item = queue.shift();
+		var test = queue.shift();
 
-		if(item) {
-			that.emit("start", item);
-			that.test(item, function(err, data) {
-				console.log("Test complete: ", err, data);
+		if(test) {
+			//Tell the index of the test
+			test.index = that.count;
+
+			that.emit("start", test);
+			that.test(test, function(err, data) {
 				if(!err) {
-					that.emit("completion", data);
-					that.report.pass(item);
+					that.emit("pass", test, data);
+					that.report.pass(test);
 				} else {
-					that.emit("failure", err);
-					that.report.fail(item, err);
+					that.emit("fail", test, err);
+					that.report.fail(test, err);
 				}
 
+				that.emit("finish", test, err, data);
+
+				that.count++;
 				next(queue);
 			})
 
@@ -225,40 +277,48 @@ resteasy.prototype.run = function() {
  */
 resteasy.prototype.test = function(test, callback) {
 	var that = this,
-		requestSchema = this.compileSchema(test, "request"),
+		baseurl = this.retrieve("url");
+
+	if(!baseurl) throw new Error("Base url is not defined. Use resteasy.define('url', base_url).");
+
+	var requestSchema = this.compileSchema(test, "request"),
 		responseSchema = this.compileSchema(test, "response");
+
+	//Merge the response schema with the expectation
+	if(test.schema) responseSchema = that.merge(test.schema, responseSchema);
 
 	// Merge the requestSchema with the test.data
 	var data = this.merge(test.data, requestSchema);
+	try {
+		this.httpRequest(baseurl + test.url, test.type, data, function(err, code, response) {
+			//Test the status code, break if they don't match
+			if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), response, code);
 
-	console.log("Testing: ", test.url, test.type, data, responseSchema);
-	this.httpRequest(test.url, test.type, data, function(err, code, response) {
-		//Test the status code, break if they don't match
-		if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), response, code);
-
-		try {
-			var result = that.compare(responseSchema, response);
-		} catch(err) {
-			callback(err, response, code);
-		} finally {
-			if(result) {
-				callback(false, response, code);
+			try {
+				var result = that.compare(responseSchema, response);
+			} catch(err) {
+				callback(err, response, code);
+			} finally {
+				if(result) {
+					callback(false, response, code);
+				}
 			}
-		}
-	});
+		});
+	} catch(e) {
+		console.log("ERROR", e);
+	}
 };
 
+/**
+ * The main HTTP interface for outside interaction to be defined elsewhere.
+ * @param  {String}   url      URL string
+ * @param  {String}   method   HTTP method
+ * @param  {Object}   data     Data to be sent alongside the request
+ * @param  {Function} callback Callback with (err, statusCode, responseData)
+ * @return {null}            
+ */
 resteasy.prototype.httpRequest = function(url, method, data, callback) {
-	callback(null, 200, {
-		a: "beep",
-		b: "boop",
-		age: [{
-			name: "Tom",
-			friends: [{
-				name: "lol"
-			}]
-		}]
-	});
+	throw new Error("resteasy#httpRequest is not defined. Please include an interface.js for the specific enviornment.");
 };
 
 /**
@@ -359,23 +419,28 @@ resteasy.prototype.update = function(url, data) { return this.all("update", url,
  * Test report class
  */
 resteasy.Report = function() {
-	this.results = [];
-};
-
-resteasy.Report.prototype.add = function(result) {
-	this.results.push(result);
+	this.passed = [];
+	this.failed = [];
 };
 
 resteasy.Report.prototype.pass = function(result) {
-	this.results.push(["pass", result]);
+	this.passed.push(result);
 };
 
 resteasy.Report.prototype.fail = function(result) {
-	this.results.push(["fail", result]);
+	this.failed.push(result);
 };
 
 resteasy.Report.prototype.compile = function() {
-	return this.results;
+	return {
+		failed: this.failed.length,
+		passed: this.passed.length,
+		total: this.passed.length + this.failed.length,
+		tests: {
+			passed: this.passed,
+			failed: this.failed
+		}
+	}
 };
 
 /**
@@ -447,6 +512,7 @@ resteasy.Test.prototype.compile = function() {
 	return this;
 };
 
+
 exports.resteasy = new resteasy;
 
-})(module.exports || window);
+})(typeof window == "undefined" ? module.exports : this.window);

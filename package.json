@@ -8,10 +8,12 @@
   "license": "BSD",
   "dependencies": {
     "request": "latest",
-    "optimist": "latest"    
+    "optimist": "latest",
+    "colors": "latest"
   },
   "devDependencies": {
-    "mocha": "latest"
+    "mocha": "latest",
+    "express": "latest"
   },
   "bin": {
     "resteasy": "./bin/resteasy"

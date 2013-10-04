@@ -202,15 +202,21 @@ describe("resteasy", function() {
 	});
 
 	describe("Test Definition API", function() {
+		this.timeout(15000);
 		it("should create a new test and add to the queue", function() {
 			var a = resteasy.post("/lol", {a : 1}).expect({}, function() {});
 
 			assert(resteasy.queue[0]);
 		});
 
-		it("should create a test and run it", function() {
+		it("should create a test and run it", function(done) {
 			var a = resteasy.get("/lolfoot", {a : 1}).expect(200, {}, function() {});
 			var a = resteasy.get("/toot").expect(404);
+
+			resteasy.addEventListener("end", function(report) {
+				console.log("Done!", report);
+				done();
+			});
 
 			resteasy.begin();
 		});
