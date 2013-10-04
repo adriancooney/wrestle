@@ -13,13 +13,17 @@ var command = argv._[0];
 
 switch(command) {
 	case "test":
-		var file;
+		var filename = argv._[1];
 
-		try {
-			file = require(process.cwd() + "/" + argv._[1]);
-			resteasy.begin();
-		} catch(e) {
-			if(e.code == "MODULE_NOT_FOUND") oops("Can't find test file.");
+		if(filename) {
+			try {
+				var file = require(process.cwd() + "/" + filename);
+				resteasy.begin();
+			} catch(e) {
+				if(e.code == "MODULE_NOT_FOUND") oops("Can't find test file.");
+			}
+		} else {
+			oops("Please supply a test file.");
 		}
 	break;
 
