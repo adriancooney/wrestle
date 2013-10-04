@@ -6,32 +6,39 @@
 var fs = require("fs"),
 	argv = require("optimist").argv;
 
-var command = argv._[0],
-	defaults = {
-		"testDir": "./test"
-	};
+// Global for the test files
+global.resteasy = require("../cli/interface.js");
+
+var command = argv._[0];
 
 switch(command) {
 	case "test":
-		console.log("Testing!");
+		var file;
+
+		try {
+			file = require(process.cwd() + "/" + argv._[1]);
+			resteasy.begin();
+		} catch(e) {
+			if(e.code == "MODULE_NOT_FOUND") oops("Can't find test file.");
+		}
 	break;
 
+	case "help":
 	default:
-		console.log("Help!");
+		help();
 }
 
-function executeTests() {
-	fs.exists(defaults.testDir, function(exists) {
-		if(exists) {
-			fs.readdir("./test", function() {
+function oops(message) {
+	console.log("Error: ".red + message);
+	process.exit();
+}
 
-			});
-		} else {
-			error("'test' directory does not exist")
-		}
+function help() {
+	[
+		"resteasy -- Simple REST API testing",
+		"  help \t\t Shows this help.",
+		"  test <file> \t Run a test file."
+	].forEach(function(line) {
+		console.log(line);
 	});
-}
-
-function error(msg) {
-	throw new Error(msg);
 }
