@@ -1,3 +1,6 @@
+/*
+ * Example server test spec with Resteasy
+ */
 resteasy.define("url", "http://localhost:8181");
 
 /*

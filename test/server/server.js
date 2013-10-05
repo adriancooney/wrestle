@@ -1,3 +1,6 @@
+/*
+ * Example server for Resteasy tests
+ */
 var crypto = require("crypto"),
 	express = require("express"),
 	app = express();

@@ -308,6 +308,9 @@ resteasy.prototype.run = function() {
 
 			that.emit("start", test);
 			that.test(test, function(err, code, data) {
+				test.err = err;
+				test.status = code;
+				test.response = data;
 
 				if(test.callback) test.callback(err, code, data);
 
@@ -593,4 +596,4 @@ resteasy.Test.prototype.compile = function() {
 
 exports.resteasy = new resteasy;
 
-})(typeof window == "undefined" ? module.exports : this.window);
+})(typeof window == "undefined" ? module.exports : this.window); //Enable node/browser interoperability

@@ -4,6 +4,7 @@
  * 	test - Run the tests
  */
 var fs = require("fs"),
+	exec = require('child_process').exec,
 	argv = require("optimist").argv;
 
 // Global for the test files
@@ -60,7 +61,8 @@ function help() {
 		"    --simple  \t Simple output report",
 		"    --report  \t Just output report",
 		"    -i x..y   \t Run tests numbers x through to y",
-		"    -i x, y, z\t Run tests x, y, z only"
+		"    -i x, y, z\t Run tests x, y, z only",
+		"  doc  \t\t Output API documentation (coming soon)"
 	].forEach(function(line) {
 		console.log(line);
 	});
