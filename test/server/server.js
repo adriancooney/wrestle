@@ -141,7 +141,7 @@ app.post("/login", function(req, res) {
 });
 
 app.get("/users", function(req, res) {
-	json.encode({
+	res.encode({
 		users: db.users
 	});
 });
