@@ -22,10 +22,9 @@ resteasy.define({
 	name: "ruby"
 })
 
-/*
- * Create a new user.
- */
-resteasy.post("/user", {
+resteasy.describe(function() {/*
+	Create a new user.
+*/}).post("/user", {
 	username: ":username",
 	password: ":password",
 	name: ":name"
@@ -42,7 +41,8 @@ resteasy.post("/user", {
 /*
  * Login and retrieve session key.
  */
-resteasy.post("/login", {
+resteasy.describe("Login and generate a session")
+.post("/login", {
 	username: ":username",
 	password: ":password"
 }).expect({

@@ -6,6 +6,8 @@ var resteasy = function() {
 	this.events = {};
 	this.queue = [];
 
+    this.version = "0.1";
+
 	this.options = {
 		display: {
 			info: true, //Show info
@@ -182,7 +184,16 @@ resteasy.prototype.compileSchema = function(test, namespace) {
 resteasy.prototype.merge = function(host, object) {
 	for(var key in object) host[key] = object[key];
 
-	return host || {};
+	return host;
+};
+
+/**
+ * Clone an object
+ * @param  {Object} object 
+ * @return {Object}        
+ */
+resteasy.prototype.clone = function(object) {
+    return this.merge({}, object);
 };
 
 /**
@@ -357,7 +368,7 @@ resteasy.prototype.test = function(test, callback) {
 
 	try {
 		// Merge the requestSchema with the test.data and expand the variables
-		var data = this.expand(this.merge(test.data, requestSchema));
+		var data = this.expand(this.merge(this.clone(test.data), requestSchema));
 
 		//Format the url
 		var path = this.format(test.path);
@@ -485,6 +496,10 @@ resteasy.prototype.all = function(type, path, data) {
 	return (new resteasy.Test(this.queue)).all(type, path, data);
 };
 
+resteasy.prototype.describe = function(description) {
+    return (new resteasy.Test(this.queue)).describe(description);
+};
+
 //Function currying
 resteasy.prototype.get = function(path, data) { return this.all("get", path, data); };
 resteasy.prototype.post = function(path, data) { return this.all("post", path, data); };
@@ -580,6 +595,20 @@ resteasy.Test.prototype.expect = function(_code, _schema, _callback) {
 	this.callback = (typeof callback == "function") ? callback : undefined;
 
 	return this.compile();
+};
+
+/**
+ * Describe the test.
+ * @param  {String|Function} description Description of the test
+ * @return {self}             
+ */
+resteasy.Test.prototype.describe = function(description) {
+    // Support function() {/* NEWLINES! */}
+    if(typeof description == "function") description = description.toString().replace(/(^[^\n]*\n)|(\n\*\/\})/g, ""); 
+
+    this.description = description;
+
+    return this;
 };
 
 /**

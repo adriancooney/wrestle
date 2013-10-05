@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page</title>
+	<style type="text/css">
+	body {
+		font-family: Helvetica, Arial, sans-serif;
+	}
+
+	.wrapper {
+		width: 960px;
+		margin: 0 auto;
+	}
+	
+	.rule {
+		border-bottom: 1px solid #eee;
+		margin-bottom: 18px;
+		padding-bottom: 18px;
+	}
+
+	.rule h1 {
+		color: #444;
+	}
+
+	.rule h1 strong {
+		color: #2e8ccf
+	}
+
+	.rule h1 span {
+		font-family: monospace;
+	}
+
+	.rule h1 span em {
+		color: purple;
+	}
+
+	pre {
+		background: #ddd;
+		border-radius: 8px;
+		border: 1px solid #aaa;
+		padding: 8px;
+	}
+	</style>
+</head>
+<body>
+<div class="wrapper">
+	<h1>API Documentation</h1>
+	<div class="rule">
+		<h1><strong>POST</strong> <span>/user</h1>
+		<p>	Create a new user.</p>
+		<h3>Parameters</h3>
+		<pre>{
+    "username": ":username",
+    "password": ":password",
+    "name": ":name"
+}</pre>
+		<h3>Response</h3>
+		<pre>{
+    "user": {
+        "username": "floob",
+        "name": "ruby",
+        "id": 5
+    },
+    "meta": {
+        "code": 200,
+        "error": false
+    }
+}</pre>
+	</div>
+	<div class="rule">
+		<h1><strong>POST</strong> <span>/login</h1>
+		<p>Login and generate a session</p>
+		<h3>Parameters</h3>
+		<pre>{
+    "username": ":username",
+    "password": ":password"
+}</pre>
+		<h3>Response</h3>
+		<pre>{
+    "session": "eb3056f3d3938101e807e4717b067365",
+    "user": {
+        "username": "floob",
+        "password": "toot",
+        "name": "ruby"
+    },
+    "meta": {
+        "code": 200,
+        "error": false
+    }
+}</pre>
+	</div>
+	<div class="rule">
+		<h1><strong>PUT</strong> <span>/user/<em>:id</em></h1>
+		<p></p>
+		<h3>Parameters</h3>
+		<pre>{
+    "username": ":username",
+    "password": "nope",
+    "session": ":session"
+}</pre>
+		<h3>Response</h3>
+		<pre>{
+    "user": {
+        "username": "floob",
+        "password": "nope",
+        "name": "ruby",
+        "session": "eb3056f3d3938101e807e4717b067365"
+    },
+    "meta": {
+        "code": 200,
+        "error": false
+    }
+}</pre>
+	</div>
+	<div class="rule">
+		<h1><strong>DELETE</strong> <span>/user/<em>:id</em></h1>
+		<p></p>
+		<h3>Parameters</h3>
+		<pre>{
+    "session": ":session"
+}</pre>
+		<h3>Response</h3>
+		<pre>{
+    "meta": {
+        "code": 200,
+        "error": false
+    }
+}</pre>
+	</div>
+	<div class="rule">
+		<h1><strong>GET</strong> <span>/preferences</h1>
+		<p></p>
+		<h3>Parameters</h3>
+		<pre>{
+    "session": ":session"
+}</pre>
+		<h3>Response</h3>
+		<pre>{
+    "notifications": true,
+    "meta": {
+        "code": 200,
+        "error": false
+    }
+}</pre>
+	</div>
+	<div class="rule">
+		<h1><strong>GET</strong> <span>/users</h1>
+		<p></p>
+		<h3>Parameters</h3>
+		<pre></pre>
+		<h3>Response</h3>
+		<pre>{
+    "users": [
+        {
+            "username": "foo",
+            "name": "Steve"
+        },
+        {
+            "username": "raw",
+            "name": "Thomas"
+        },
+        {
+            "username": "boo",
+            "name": "Adrian"
+        },
+        {
+            "username": "admin",
+            "name": "Johnny"
+        },
+        {
+            "username": "mac",
+            "name": "Michael"
+        }
+    ],
+    "meta": {
+        "code": 200,
+        "error": false
+    }
+}</pre>
+	</div>
+	<p>Generated with RESTeasy 0.1</p>
+</div>
+</body>
+</html>

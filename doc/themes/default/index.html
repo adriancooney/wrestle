@@ -2,14 +2,60 @@
 <html>
 <head>
     <title>Page</title>
-    <link rel="stylesheet" type="text/css" />
+	<style type="text/css">
+	body {
+		font-family: Helvetica, Arial, sans-serif;
+	}
+
+	.wrapper {
+		width: 960px;
+		margin: 0 auto;
+	}
+	
+	.rule {
+		border-bottom: 1px solid #eee;
+		margin-bottom: 18px;
+		padding-bottom: 18px;
+	}
+
+	.rule h1 {
+		color: #444;
+	}
+
+	.rule h1 strong {
+		color: #2e8ccf
+	}
+
+	.rule h1 span {
+		font-family: monospace;
+	}
+
+	.rule h1 span em {
+		color: purple;
+	}
+
+	pre {
+		background: #ddd;
+		border-radius: 8px;
+		border: 1px solid #aaa;
+		padding: 8px;
+	}
+	</style>
 </head>
 <body>
+<div class="wrapper">
+	<h1>API Documentation</h1>
 	{{#rules}}
-		<h1>{{method}} {{path}}</h1>
-		<pre>
-			{{response}}
-		</pre>
+	<div class="rule">
+		<h1><strong>{{method}}</strong> <span>{{{path}}}</h1>
+		<p>{{description}}</p>
+		<h3>Parameters</h3>
+		<pre>{{{data_formatted}}}</pre>
+		<h3>Response</h3>
+		<pre>{{{response_formatted}}}</pre>
+	</div>
 	{{/rules}}
+	<p>Generated with RESTeasy {{version}}</p>
+</div>
 </body>
 </html>

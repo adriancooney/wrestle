@@ -1,69 +1,150 @@
 #!/usr/bin/env node 
 /*
  * resteasy -- A rest API testing suite
- * 	test - Run the tests
+ *  test - Run the tests
  */
 var fs = require("fs"),
-	exec = require('child_process').exec,
-	argv = require("optimist").argv;
+    path = require("path"),
+    mustache = require("mustache"),
+    exec = require('child_process').exec,
+    argv = require("optimist").argv;
 
 // Global for the test files
 global.resteasy = require("../cli/interface.js");
 
 switch(argv._[0]) {
-	case "test":
-		var filename = argv._[1];
+    case "test":
+        var filename = argv._[1];
 
-		if(filename) {
-			try {
-				if(argv.report) display("report");
-				if(argv.simple) display("fail", "begin", "pass", "info", "report");
+        if(filename) {
+            try {
+                if(argv.report) display("report");
+                if(argv.simple) display("fail", "begin", "pass", "info", "report");
 
-				// Import the tests
-				var file = require(process.cwd() + "/" + filename);
+                // Import the tests
+                var file = require(process.cwd() + "/" + filename);
 
-				//Perform an selections
-				if(argv.i !== undefined) {
-					argv.i = argv.i.toString();
-					if(/(\d+)\.\.(\d+)/.exec(argv.i)) resteasy.begin([RegExp.$1, RegExp.$2]);
-					else resteasy.begin(argv._.slice(2).concat([argv.i.replace(",", "")]));
-				} else {
-					resteasy.begin();
-				}
-			} catch(e) {
-				if(e.code == "MODULE_NOT_FOUND") oops("Can't find test file.");
-				else throw e;
-			}
-		} else {
-			oops("Please supply a test file.");
-		}
-	break;
+                //Perform an selections
+                if(argv.i !== undefined) {
+                    argv.i = argv.i.toString();
+                    if(/(\d+)\.\.(\d+)/.exec(argv.i)) resteasy.begin([RegExp.$1, RegExp.$2]);
+                    else resteasy.begin(argv._.slice(2).concat([argv.i.replace(",", "")]));
+                } else {
+                    resteasy.begin();
+                }
+            } catch(e) {
+                if(e.code == "MODULE_NOT_FOUND") oops("Can't find test file.");
+                else throw e;
+            }
+        } else {
+            oops("Please supply a test file.");
+        }
+    break;
 
-	case "help":
-	default:
-		help();
+    case "doc":
+        var filename = argv._[1];
+
+        if(filename) {
+            var theme = argv.theme || "default",
+                output = argv.output || path.dirname(filename) + "/doc.html";
+
+            //Import and run the tests
+            var file = require(process.cwd() + "/" + filename);
+
+            //Hide all output
+            display([]);
+
+            console.log("Running tests..");
+            //Bind on complete event listener
+            resteasy.on("end", function(report) {
+                console.log("Tests complete. Building documentation..");
+                buildDoc(report, theme, output);
+            });
+
+            //Bind to errors
+            resteasy.on("error", function(err) {
+                oops(err);
+            });
+
+            //Start testing
+            resteasy.begin();
+
+        } else oops("Please supply a test file.");
+    break;
+
+    case "help":
+    default:
+        help();
 }
 
 function display() {
-	for(var key in resteasy.options.display) resteasy.options.display[key] = Array.prototype.indexOf.call(arguments, key) !== -1;
+    for(var key in resteasy.options.display) resteasy.options.display[key] = Array.prototype.indexOf.call(arguments, key) !== -1;
 }
 
 function oops(message) {
-	console.log(("Error: " + message).red.inverse);
-	process.exit();
+    console.log(("Error: " + message).red.inverse);
+    process.exit();
 }
 
 function help() {
-	[
-		"resteasy -- Simple REST API testing",
-		"  help \t\t Shows this help.",
-		"  test <file> \t Run a test file.",
-		"    --simple  \t Simple output report",
-		"    --report  \t Just output report",
-		"    -i x..y   \t Run tests numbers x through to y",
-		"    -i x, y, z\t Run tests x, y, z only",
-		"  doc  \t\t Output API documentation (coming soon)"
-	].forEach(function(line) {
-		console.log(line);
-	});
+    [
+        "resteasy -- Simple REST API testing",
+        "  help \t\t\t Shows this help.",
+        "  test <file> \t\t Run a test file.",
+        "    --simple  \t\t Simple output report",
+        "    --report  \t\t Just output report",
+        "    --i x..y   \t\t Run tests numbers x through to y",
+        "    --i x, y, z\t\t Run tests x, y, z only",
+        "  doc <file> \t\t Output API documentation",
+        "    --theme <theme>\t Output documentation with theme from doc/theme/",
+        "    --output <path>\t Specify output path for documentation. Defaults to test file directory."
+    ].forEach(function(line) {
+        console.log(line);
+    });
+}
+
+function buildDoc(report, theme, output) {
+    var themeFile = __dirname + "/../doc/themes/" + theme + "/index.html";
+
+    fs.exists(themeFile, function(exists) {
+        if(exists) {
+            // Retrieve the theme file
+            fs.readFile(themeFile, "utf8", function(err, file) {
+                if(err) return oops(err);
+
+                var tests = report.tests.all.map(function(test) {
+                    if(test.pass && test.status === 200) {
+                        test.method = test.method.toUpperCase();
+                        test.path = test.path.replace(/(\:\w+)/g, "<em>$1</em>");
+                        test.parameters = test.schema;
+
+                        return test;
+                    }
+                }).filter(function(val) {
+                    return !!val;
+                });
+
+                //Run it through mustache
+                var doc = mustache.render(file, {
+                    rules: tests,
+                    version: resteasy.version,
+
+                    "response_formatted": function() {
+                        return JSON.stringify(this.response, null, 4);
+                    },
+
+                    "data_formatted": function() {
+                        return JSON.stringify(this.data, null, 4);
+                    }
+                });
+                
+                // And write the file
+                fs.writeFile(output, doc, function(err) {
+                    if(err) return oops(err);
+
+                    console.log("Documentation built and written to '" + output + "'.");
+                });
+            });
+        } else oops("Theme '" + theme + "' does not exist in doc/themes/.");
+    });
 }

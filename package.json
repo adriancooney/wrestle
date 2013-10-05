@@ -8,7 +8,8 @@
   "license": "BSD",
   "dependencies": {
     "optimist": "latest",
-    "colors": "latest"
+    "colors": "latest",
+    "mustache": "latest"
   },
   "devDependencies": {
     "mocha": "latest",
