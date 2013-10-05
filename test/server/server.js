@@ -121,7 +121,8 @@ app.post("/user", function(req, res) {
 		res.encode({
 			user: {
 				username: user.username,
-				name: user.name || ""
+				name: user.name || "",
+				id: db.users.length - 1
 			}
 		});
 	}
@@ -140,9 +141,25 @@ app.post("/login", function(req, res) {
 	}
 });
 
+app.put("/user/:id", authorize, function(req, res) {
+	var user = db.users[parseInt(req.params.id)];
+
+	for(var param in req.body) user[param] = req.body[param];
+
+	res.encode({
+		user: user
+	});
+});
+
+app.delete("/user/:id", authorize, function(req, res) {
+	db.users.splice(req.params.id, req.params.id + 1);
+
+	res.encode({});
+});
+
 app.get("/users", function(req, res) {
 	res.encode({
-		users: db.users
+		users: db.users.map(function(o) { delete o.password; return o; })
 	});
 });
 

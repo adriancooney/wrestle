@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node 
 /*
  * resteasy -- A rest API testing suite
  * 	test - Run the tests
@@ -9,18 +9,29 @@ var fs = require("fs"),
 // Global for the test files
 global.resteasy = require("../cli/interface.js");
 
-var command = argv._[0];
-
-switch(command) {
+switch(argv._[0]) {
 	case "test":
 		var filename = argv._[1];
 
 		if(filename) {
 			try {
+				if(argv.report) display("report");
+				if(argv.simple) display("fail", "begin", "pass", "info", "report");
+
+				// Import the tests
 				var file = require(process.cwd() + "/" + filename);
-				resteasy.begin();
+
+				//Perform an selections
+				if(argv.i !== undefined) {
+					argv.i = argv.i.toString();
+					if(/(\d+)\.\.(\d+)/.exec(argv.i)) resteasy.begin([RegExp.$1, RegExp.$2]);
+					else resteasy.begin(argv._.slice(2).concat([argv.i.replace(",", "")]));
+				} else {
+					resteasy.begin();
+				}
 			} catch(e) {
 				if(e.code == "MODULE_NOT_FOUND") oops("Can't find test file.");
+				else throw e;
 			}
 		} else {
 			oops("Please supply a test file.");
@@ -32,8 +43,12 @@ switch(command) {
 		help();
 }
 
+function display() {
+	for(var key in resteasy.options.display) resteasy.options.display[key] = Array.prototype.indexOf.call(arguments, key) !== -1;
+}
+
 function oops(message) {
-	console.log("Error: ".red + message);
+	console.log(("Error: " + message).red.inverse);
 	process.exit();
 }
 

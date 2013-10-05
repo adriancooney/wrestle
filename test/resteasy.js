@@ -31,12 +31,12 @@ describe("resteasy", function() {
 	describe("#format", function() {
 		it("should format with a defined variable", function() {
 			resteasy.define("walter", "heisenberg");
-			assert.equal(resteasy.format("$walter"), "heisenberg");
+			assert.equal(resteasy.format(":walter"), "heisenberg");
 		});
 
 		it("should throw an error for undefined variable", function() {
 			assert.throws(function() {
-				resteasy.format("$wut");
+				resteasy.format(":wut");
 			});
 		});
 	});
@@ -44,7 +44,7 @@ describe("resteasy", function() {
 	describe("#expand", function() {
 		it("should expand an object of variables", function() {
 			var o = resteasy.expand({
-				name: "$name"
+				name: ":name"
 			});
 
 			assert.equal(o.name, "adrian");

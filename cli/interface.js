@@ -45,29 +45,33 @@ resteasy.httpRequest = function(url, method, data, callback) {
 };
 
 resteasy.on("begin", function() {
-	console.log("Beginning tests.\n");
+	if(resteasy.options.display.begin) console.log("Beginning tests.\n");
 });
 
 resteasy.on("end", function(report) {
-	console.log("Testing complete.", (report.passed + " passed.").green, (report.failed + " failed.").red, report.total + " in total.");
+	if(resteasy.options.display.report) {
+		console.log(report.tests.all.map(function(test) { return "*"[test.pass ? "green" : "red"]; }).join(""))
+		console.log("Testing complete.", (report.passed + " passed.").green, (report.failed + " failed.").red, report.total + " in total.");
+	}
 });
 
 resteasy.on("start", function(test) {
-	console.log(("Test #" + (test.index + 1) + ": ").magenta 
-		+ test.method.toUpperCase().blue + " " + test.url.cyan, test.data);
-	console.log("Expect:  ".magenta + (test.code || 200), (test.schema || ""));
+	if(resteasy.options.display.info) console.log(("Test #" + (test.index + 1) + ": ").magenta 
+		+ test.method.toUpperCase().blue + " " + test.path.cyan, test.data || "");
+
+	if(resteasy.options.display.expect) console.log("Expect:  ".magenta + (test.code || 200), (test.schema || ""));
 });
 
 resteasy.on("finish", function(test, err, code, data) {
-	console.log("Reponse:".magenta, code, data);
+	if(resteasy.options.display.response) console.log("Reponse:".magenta, code, data);
 });
 
 resteasy.on("pass", function(test, code, data) {
-	console.log("Test passed.\n".green);
+	if(resteasy.options.display.pass) console.log("Test passed.\n".green);
 });
 
 resteasy.on("fail", function(test, err, code, data) {
-	console.log("Test failed.".red, err.message, "\n");
+	if(resteasy.options.display.fail) console.log("Test failed.".red, err.message, "\n");
 });
 
 resteasy.on("error", function(err) {

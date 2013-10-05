@@ -23,22 +23,25 @@ resteasy.define({
  * Create a new user.
  */
 resteasy.post("/user", {
-	username: "$username",
-	password: "$password",
-	name: "$name"
+	username: ":username",
+	password: ":password",
+	name: ":name"
 }).expect({
 	user: {
 		username: String,
-		name: String
+		name: String,
+		id: Number
 	}
+}, function(err, code, data) {
+	resteasy.define("id", data.user.id);
 });
 
 /*
  * Login and retrieve session key.
  */
 resteasy.post("/login", {
-	username: "$username",
-	password: "$password"
+	username: ":username",
+	password: ":password"
 }).expect({
 	session: /[0-9a-z]{32}/ //MD5 hash
 }, function(err, code, data) {
@@ -46,13 +49,31 @@ resteasy.post("/login", {
 });
 
 /*
+ * Update a user
+ */
+resteasy.put("/user/:id", {
+	username: ":username",
+	password: "nope",
+	session: ":session"
+}).expect(200, function() {
+	resteasy.define("password", "nope");
+});
+
+/*
+ * Delete a user
+ */
+resteasy.delete("/user/:id", {
+	session: ":session"
+}).expect(200);
+
+/*
  * Get user preferences
  */
 resteasy.get("/preferences", {
-	session: "$session"
+	session: ":session"
 }).expect({
 	notifications: Boolean
-})
+});
 
 /*
  * Deny access unless session key 
@@ -75,3 +96,5 @@ resteasy.get("/users").expect({
 		name: String
 	}]
 });
+
+resteasy.get("/404").expect(404);

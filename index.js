@@ -6,6 +6,18 @@ var resteasy = function() {
 	this.events = {};
 	this.queue = [];
 
+	this.options = {
+		display: {
+			info: true, //Show info
+			expect: true, //Show expectation
+			pass: true, //Show passes
+			response: true, //Show response
+			fail: true, //Show fails
+			begin: true, //Show beginning message
+			report: true// Show report
+		}
+	};
+
 	//Runtime variables
 	this.running = false;
 	this.buffer = [];
@@ -74,10 +86,10 @@ resteasy.prototype.retrieve = function(name) {
  */
 resteasy.prototype.format = function(string) {
 	var that = this;
-	return typeof string == "string" ? string.replace(/\$(\w+)/g, function(match, name) {
+	return typeof string == "string" ? string.replace(/\:(\w+)/g, function(match, name) {
 		var value = that.retrieve(name);
 
-		if(!value) throw new Error("Variable '" + name + "' not defined in resteasy#format.");
+		if(!value) throw new Error("Variable '" + name + "' not defined.");
 		else return value;
 	}) : string;
 };
@@ -233,16 +245,39 @@ resteasy.prototype.queryString = function(object, parent, queryString) {
 /*
  * Suite tools
  */
+resteasy.prototype.initSuite = function() {
+	this.buffer = this.queue.slice(0);
+	this.report = new resteasy.Report;
+	this.count = 0;
+};
+
+/**
+ * Chop around the buffer to only run specific tests
+ * @param  {Number|Array} bounds Number, [upper, lower], [specific, test, indexes]
+ * @return {null}        
+ */
+resteasy.prototype.selectTests = function(bounds) {
+	if(typeof bounds == "number" || bounds.length == 1) {
+		bounds = Array.isArray(bounds) ? bounds[0] : bounds;
+		bounds--;
+		this.buffer = this.buffer.slice(bounds, bounds + 1);
+	} else if(bounds.length == 2) {
+		this.buffer = this.buffer.slice(bounds[0] - 1, bounds[1] - 1);
+	} else {
+		bounds = bounds.map(function(v) { return parseInt(v); });
+		this.buffer = this.buffer.filter(function(v, i) {
+			return bounds.indexOf(i + 1) !== -1;
+		});
+	}
+};
 
 /**
  * Start the testing suite
  * @return {null}
  */
 resteasy.prototype.begin = function() {
-	this.buffer = this.queue.slice(0);
-	this.report = new resteasy.Report;
-	this.count = 0;
-
+	this.initSuite();
+	if(arguments.length) this.selectTests.apply(this, arguments);
 	this.emit("begin");
 	this.run();
 };
@@ -270,21 +305,20 @@ resteasy.prototype.run = function() {
 		var test = queue.shift();
 
 		if(test) {
-			//Tell the index of the test
-			test.index = that.count;
 
 			that.emit("start", test);
 			that.test(test, function(err, code, data) {
-				console.log("KEY LENGTH: ", queue.length);
 
 				if(test.callback) test.callback(err, code, data);
 
 				that.emit("finish", test, err, code, data);
 
 				if(!err) {
+					test.pass = true;
 					that.emit("pass", test, code, data);
 					that.report.pass(test);
 				} else {
+					test.pass = false;
 					that.emit("fail", test, err, code, data);
 					that.report.fail(test, err);
 				}
@@ -318,10 +352,17 @@ resteasy.prototype.test = function(test, callback) {
 	//Merge the response schema with the expectation
 	if(test.schema) responseSchema = that.merge(test.schema, responseSchema);
 
-	// Merge the requestSchema with the test.data and expand the variables
-	var data = this.expand(this.merge(test.data, requestSchema));
+	try {
+		// Merge the requestSchema with the test.data and expand the variables
+		var data = this.expand(this.merge(test.data, requestSchema));
 
-	this.httpRequest(baseurl + test.url, test.method, data, function(err, code, response) {
+		//Format the url
+		var path = this.format(test.path);
+	} catch(err) {
+		return callback(err);
+	}
+
+	this.httpRequest(baseurl + path, test.method, data, function(err, code, response) {
 		if(err) {
 			return callback(err, code, response);
 		}
@@ -437,30 +478,33 @@ resteasy.prototype.toTypeString = function(type) {
 /**
  * Test definition API
  */
-resteasy.prototype.all = function(type, url, data) {
-	return (new resteasy.Test(this.queue)).all(type, url, data);
+resteasy.prototype.all = function(type, path, data) {
+	return (new resteasy.Test(this.queue)).all(type, path, data);
 };
 
 //Function currying
-resteasy.prototype.get = function(url, data) { return this.all("get", url, data); };
-resteasy.prototype.post = function(url, data) { return this.all("post", url, data); };
-resteasy.prototype.put = function(url, data) { return this.all("put", url, data); };
-resteasy.prototype.update = function(url, data) { return this.all("update", url, data); };
+resteasy.prototype.get = function(path, data) { return this.all("get", path, data); };
+resteasy.prototype.post = function(path, data) { return this.all("post", path, data); };
+resteasy.prototype.put = function(path, data) { return this.all("put", path, data); };
+resteasy.prototype.delete = function(path, data) { return this.all("delete", path, data); };
 
 /**
  * Test report class
  */
 resteasy.Report = function() {
+	this.tests = [];
 	this.passed = [];
 	this.failed = [];
 };
 
-resteasy.Report.prototype.pass = function(result) {
-	this.passed.push(result);
+resteasy.Report.prototype.pass = function(test) {
+	this.tests.push(test);
+	this.passed.push(test);
 };
 
-resteasy.Report.prototype.fail = function(result) {
-	this.failed.push(result);
+resteasy.Report.prototype.fail = function(test) {
+	this.tests.push(test);
+	this.failed.push(test);
 };
 
 resteasy.Report.prototype.compile = function() {
@@ -470,7 +514,8 @@ resteasy.Report.prototype.compile = function() {
 		total: this.passed.length + this.failed.length,
 		tests: {
 			passed: this.passed,
-			failed: this.failed
+			failed: this.failed,
+			all: this.tests
 		}
 	}
 };
@@ -480,6 +525,7 @@ resteasy.Report.prototype.compile = function() {
  */
 resteasy.Test = function(queue) {
 	this.queue = queue;
+	this.index = this.queue.length;
 };
 
 /**
@@ -489,9 +535,9 @@ resteasy.Test = function(queue) {
  * @param  {Object} data The data to pass to the server
  * @return {self}      
  */
-resteasy.Test.prototype.all = function(method, url, data) {
+resteasy.Test.prototype.all = function(method, path, data) {
 	this.method = method;
-	this.url = url;
+	this.path = path;
 	this.data = data;
 
 	return this;
