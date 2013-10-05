@@ -56,7 +56,11 @@ function help() {
 	[
 		"resteasy -- Simple REST API testing",
 		"  help \t\t Shows this help.",
-		"  test <file> \t Run a test file."
+		"  test <file> \t Run a test file.",
+		"    --simple  \t Simple output report",
+		"    --report  \t Just output report",
+		"    -i x..y   \t Run tests numbers x through to y",
+		"    -i x, y, z\t Run tests x, y, z only"
 	].forEach(function(line) {
 		console.log(line);
 	});
