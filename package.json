@@ -7,7 +7,6 @@
   "author": "Adrian Cooney",
   "license": "BSD",
   "dependencies": {
-    "request": "latest",
     "optimist": "latest",
     "colors": "latest"
   },
