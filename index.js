@@ -51,7 +51,11 @@ resteasy.prototype.emit = function() {
  * @return {*}       Value stored
  */
 resteasy.prototype.define = function(name, value) {
-	return this.store[name] = value;
+	if(typeof name == "object") {
+		for(var key in name) {
+			this.store[key] = name[key];
+		}
+	} else return this.store[name] = value;
 };
 
 /**
@@ -70,12 +74,35 @@ resteasy.prototype.retrieve = function(name) {
  */
 resteasy.prototype.format = function(string) {
 	var that = this;
-	return string.replace(/\$(\w+)/g, function(match, name) {
-		var value = that.store[name];
+	return typeof string == "string" ? string.replace(/\$(\w+)/g, function(match, name) {
+		var value = that.retrieve(name);
 
 		if(!value) throw new Error("Variable '" + name + "' not defined in resteasy#format.");
 		else return value;
-	});
+	}) : string;
+};
+
+/**
+ * Expand an object with variables
+ * @param  {Object} object 
+ * @return {Object}        The expanded object
+ */
+resteasy.prototype.expand = function(object) {
+	var that = this;
+	return (function next(keys) {
+		var key = keys.shift();
+
+		if(key) {
+			var value = object[key];
+
+			if(value.constructor == Object) object[key] = that.expand(value);
+			else object[key] = that.format(value);
+
+			return next(keys);
+		} else {
+			return object;
+		}
+	})(Object.keys(object));
 };
 
 /**
@@ -122,9 +149,9 @@ resteasy.prototype.compileSchema = function(test, namespace) {
 
 	var schemas = [
 		"*.*",
-		test.type + ".*",
+		test.method + ".*",
 		"*." + test.code,
-		test.type + "." + test.code
+		test.method + "." + test.code
 	].forEach(function(schema) {
 		var value = that.retrieve(name + schema);
 
@@ -143,7 +170,7 @@ resteasy.prototype.compileSchema = function(test, namespace) {
 resteasy.prototype.merge = function(host, object) {
 	for(var key in object) host[key] = object[key];
 
-	return host;
+	return host || {};
 };
 
 /**
@@ -247,16 +274,20 @@ resteasy.prototype.run = function() {
 			test.index = that.count;
 
 			that.emit("start", test);
-			that.test(test, function(err, data) {
+			that.test(test, function(err, code, data) {
+				console.log("KEY LENGTH: ", queue.length);
+
+				if(test.callback) test.callback(err, code, data);
+
+				that.emit("finish", test, err, code, data);
+
 				if(!err) {
-					that.emit("pass", test, data);
+					that.emit("pass", test, code, data);
 					that.report.pass(test);
 				} else {
-					that.emit("fail", test, err);
+					that.emit("fail", test, err, code, data);
 					that.report.fail(test, err);
 				}
-
-				that.emit("finish", test, err, data);
 
 				that.count++;
 				next(queue);
@@ -287,26 +318,27 @@ resteasy.prototype.test = function(test, callback) {
 	//Merge the response schema with the expectation
 	if(test.schema) responseSchema = that.merge(test.schema, responseSchema);
 
-	// Merge the requestSchema with the test.data
-	var data = this.merge(test.data, requestSchema);
-	try {
-		this.httpRequest(baseurl + test.url, test.type, data, function(err, code, response) {
-			//Test the status code, break if they don't match
-			if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), response, code);
+	// Merge the requestSchema with the test.data and expand the variables
+	var data = this.expand(this.merge(test.data, requestSchema));
 
-			try {
-				var result = that.compare(responseSchema, response);
-			} catch(err) {
-				callback(err, response, code);
-			} finally {
-				if(result) {
-					callback(false, response, code);
-				}
+	this.httpRequest(baseurl + test.url, test.method, data, function(err, code, response) {
+		if(err) {
+			return callback(err, code, response);
+		}
+
+		//Test the status code, break if they don't match
+		if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), code, response);
+
+		try {
+			var result = that.compare(responseSchema, response);
+		} catch(err) {
+			callback(err, code, response);
+		} finally {
+			if(result) {
+				callback(false, code, response);
 			}
-		});
-	} catch(e) {
-		console.log("ERROR", e);
-	}
+		}
+	});
 };
 
 /**
@@ -457,8 +489,8 @@ resteasy.Test = function(queue) {
  * @param  {Object} data The data to pass to the server
  * @return {self}      
  */
-resteasy.Test.prototype.all = function(type, url, data) {
-	this.type = type;
+resteasy.Test.prototype.all = function(method, url, data) {
+	this.method = method;
 	this.url = url;
 	this.data = data;
 

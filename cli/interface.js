@@ -24,23 +24,28 @@ resteasy.httpRequest = function(url, method, data, callback) {
 	}, function(res) {
 		res.setEncoding("utf8");
 		res.on("data", function(body) {
-			var json, err;
 			try {
-				json = JSON.parse(body);
-			} catch(e) {
-				err = e;
-			} finally {
-				callback(err, res.statusCode, err ? body : json);
+				var json = JSON.parse(body);
+				callback(false, res.statusCode, json);
+			} catch(err) {
+				callback(err, res.statusCode, body);
+				resteasy.emit("error", err);
 			}
 		})
 	});
 
+	request.setTimeout(100);
+
 	request.write((method !== "get" && data) ? resteasy.queryString(data) : "");
 	request.end();
+
+	request.on("error", function(err) {
+		resteasy.emit("error", err);
+	});
 };
 
 resteasy.on("begin", function() {
-	console.log("Beginning tests.");
+	console.log("Beginning tests.\n");
 });
 
 resteasy.on("end", function(report) {
@@ -48,15 +53,41 @@ resteasy.on("end", function(report) {
 });
 
 resteasy.on("start", function(test) {
-	console.log("Test #" + (test.index + 1) + ": " + test.type.toUpperCase() + " " + test.url);
+	console.log(("Test #" + (test.index + 1) + ": ").magenta 
+		+ test.method.toUpperCase().blue + " " + test.url.cyan, test.data);
+	console.log("Expect:  ".magenta + (test.code || 200), (test.schema || ""));
 });
 
-resteasy.on("pass", function(test, data) {
-	console.log("Test passed.".green);
+resteasy.on("finish", function(test, err, code, data) {
+	console.log("Reponse:".magenta, code, data);
 });
 
-resteasy.on("fail", function(test, err) {
-	console.log("Test failed.".red, err.message);
+resteasy.on("pass", function(test, code, data) {
+	console.log("Test passed.\n".green);
 });
+
+resteasy.on("fail", function(test, err, code, data) {
+	console.log("Test failed.".red, err.message, "\n");
+});
+
+resteasy.on("error", function(err) {
+	var msg = err.toString().replace(/^Error\:/, "");
+
+	switch(err.code || err.type) {
+		case "ECONNREFUSED":
+			msg = "Cannot reach server"
+		break;
+
+		case "ECONNRESET":
+			msg = "Request timeout"
+		break;
+
+		case "unexpected_token":
+			msg = "Invalid JSON response"
+		break;
+	}
+
+	console.log(("\nError: " + msg + (err.code ? ", " + err.code : "")).red.inverse);
+})
 
 module.exports = resteasy;

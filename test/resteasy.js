@@ -41,6 +41,16 @@ describe("resteasy", function() {
 		});
 	});
 
+	describe("#expand", function() {
+		it("should expand an object of variables", function() {
+			var o = resteasy.expand({
+				name: "$name"
+			});
+
+			assert.equal(o.name, "adrian");
+		});
+	});
+
 	describe("#schema", function() {
 		it("should store a schema", function() {
 			resteasy.schema("response", {});
