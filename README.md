@@ -34,6 +34,7 @@ There are a couple of caveats however due to the Cross-Origin Resource Sharing (
 3. Enable CORS in your API's headers.
 
 ## Documentation
+#### TEST DEFINITION
 ### resteasy.describe( _&lt;string>_ )
 Describe a test case. This is the `description` variable in the documentation generator
 
