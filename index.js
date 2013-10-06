@@ -206,9 +206,7 @@ resteasy.prototype.clone = function(object) {
  * @return {string}            URL with encoded parameters
  */
 resteasy.prototype.toURL = function(base, parameters) {
-	return base + (/\?/.test(base) ? "&" : "?") + Object.keys(parameters).map(function(key) {
-		return key + "=" + parameters[key];
-	}).join("&");
+	return base + (/\?/.test(base) ? "&" : "?") + this.queryString(parameters);
 };
 
 /**

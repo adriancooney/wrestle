@@ -101,7 +101,7 @@ resteasy.on("end", function(report) {
 });
 
 resteasy.on("start", function(test) {
-	if(resteasy.options.display.info) console.log(("Test #" + (test.index + 1) + ": ").magenta 
+	if(resteasy.options.display.info) console.log(("Test " + ("#" + (test.index + 1)).underline + ": ").magenta 
 		+ test.method.toUpperCase().blue + " " + test.path.cyan, test.parameters || "");
 
 	if(resteasy.options.display.expect) console.log("Expect:  ".magenta + (test.code || 200), (test.schema || ""));

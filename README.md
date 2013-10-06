@@ -2,6 +2,17 @@
 ### A REST API unit testing framework
 Resyeasy enables you to unit test and automatically document your API from the command line or the browser by specifying intuitive, unit tests for each route.
 
+## Features
+* Simple unit test defintion.
+* Run tests in the browser or from the command line.
+* Generate documentation (with themes) from the test spec.
+
+## Installation
+Install Resteasy with npm.
+
+	$ npm install resteasy -g
+
+
 ## Tests
 Defining tests with RESTeasy is as simple as defining the route, the HTTP method and the expected JSON response.
 

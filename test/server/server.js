@@ -5,6 +5,7 @@ var crypto = require("crypto"),
 	express = require("express"),
 	app = express();
 
+app.use(express.logger());
 app.use(express.bodyParser());
 app.use(express.static(__dirname + "/../../"));
 
