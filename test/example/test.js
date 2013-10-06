@@ -13,8 +13,8 @@ resteasy.response.schema("post", 200, {
 	}
 });
 
-resteasy.headers.schema("post", {
-	"x-lol": "Adrian"
+resteasy.headers.schema({
+	"X-API-Unit-Testing": "True"
 })
 
 /*
@@ -50,7 +50,7 @@ resteasy.describe("Login and generate a session")
 	username: ":username",
 	password: ":password"
 }).expect({
-	session: /[0-9a-z]{32}/ //MD5 hash
+	session: /[0-9a-z]{32}/, //MD5 hash
 }, function(err, code, data) {
 	resteasy.define("session", data.session);
 });
@@ -72,6 +72,13 @@ resteasy.put("/user/:id", {
 resteasy.delete("/user/:id", {
 	session: ":session"
 }).expect(200);
+
+/*
+ * I WANT TO FAIL. MAKE ME FAIL.
+ */
+resteasy.get("/fail").expect({
+	a: 1
+});
 
 /*
  * Get user preferences

@@ -68,14 +68,7 @@ resteasy.httpRequest = function(url, method, headers, data, callback) {
 				lines.forEach(function(line) { console.log(("> " + line + " ").yellow.inverse); });
 			}
 
-			try {
-				var json = JSON.parse(body);
-				callback(false, res, res.statusCode, json);
-			} catch(err) {
-				throw err;
-				callback(err, res, res.statusCode, body);
-				resteasy.emit("error", err);
-			}
+			callback(res, res.statusCode, body);
 		})
 	});
 
@@ -97,7 +90,7 @@ resteasy.on("begin", function() {
 resteasy.on("end", function(report) {
 	if(resteasy.options.display.report) {
 		console.log(report.tests.all.map(function(test) { return "*"[test.pass ? "green" : "red"]; }).join(""))
-		console.log("Testing complete.", (report.passed + " passed.").green, (report.failed + " failed.").red, report.total + " in total.");
+		console.log("Testing complete in " + (report.duration/1000).toFixed(3) + "s.", (report.passed + " passed.").green, (report.failed + " failed.").red, report.total + " in total.");
 	}
 });
 
@@ -114,11 +107,20 @@ resteasy.on("finish", function(test, err, code, data) {
 });
 
 resteasy.on("pass", function(test, code, data) {
-	if(resteasy.options.display.pass) console.log("Test passed.\n".green);
+	if(resteasy.options.display.pass) console.log(("Test passed. (" + (test.duration.toFixed(3)/1000) + "s)\n").green);
 });
 
 resteasy.on("fail", function(test, err, code, data) {
-	if(resteasy.options.display.fail) console.log("Test failed.".red, err.message, "\n");
+	// Pretty error
+	switch(err.type) {
+		case "unexpected_token":
+			err.message = "Invalid JSON response."
+		break;
+	}
+
+	if(resteasy.options.display.fail) {
+		console.log(("Test failed. (" + (test.duration.toFixed(3)/1000) + "s)\n").red + err.message.red.inverse, "\n");
+	}
 });
 
 resteasy.on("error", function(err) {
@@ -131,10 +133,6 @@ resteasy.on("error", function(err) {
 
 		case "ECONNRESET":
 			msg = "Request timeout"
-		break;
-
-		case "unexpected_token":
-			msg = "Invalid JSON response"
 		break;
 	}
 

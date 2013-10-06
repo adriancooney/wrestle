@@ -33,7 +33,7 @@ var resteasy = function() {
     this.request.schema = this.schema.bind(this, "request");
 
     this.headers = {};
-    this.headers.schema = this.schema.bind(this, "header");
+    this.headers.schema = this.schema.bind(this, "headers");
 };
 
 /**
@@ -290,7 +290,13 @@ resteasy.prototype.selectTests = function(bounds) {
  */
 resteasy.prototype.begin = function() {
 	this.initSuite();
+
+	//Apply the selection
 	if(arguments.length) this.selectTests.apply(this, arguments);
+
+	//Report timestamp
+	this.report.startTime = new Date;
+
 	this.emit("begin");
 	this.run();
 };
@@ -318,9 +324,15 @@ resteasy.prototype.run = function() {
 		var test = queue.shift();
 
 		if(test) {
+			//Add the test start timestamp
+			test.startTime = new Date;
 
 			that.emit("start", test);
 			that.test(test, function(err, code, data) {
+				//Add the end timestamp
+				test.endTime = new Date;
+				test.duration = test.endTime - test.startTime;
+
 				test.err = err;
 				test.status = code;
 				test.response = data;
@@ -344,6 +356,8 @@ resteasy.prototype.run = function() {
 			})
 
 		} else {
+			that.report.endTime = new Date;
+
 			//Done
 			that.emit("end", that.report.compile());
 		}
@@ -363,7 +377,7 @@ resteasy.prototype.test = function(test, callback) {
 	if(!baseurl) throw new Error("Base url is not defined. Use resteasy.define('url', base_url).");
 
     var requestSchema = this.compileSchema(test, "request"),
-	    headersSchema = this.compileSchema(test, "Headers");
+	    headersSchema = this.compileSchema(test, "headers");
 
 	try {
 		// Merge the requestSchema with the test.data and expand the variables
@@ -379,8 +393,11 @@ resteasy.prototype.test = function(test, callback) {
 		return callback(err);
 	}
 
-	this.httpRequest(baseurl + path, test.method, test.headers, data, function(err, res, code, response) {
-		if(err) {
+	this.httpRequest(baseurl + path, test.method, test.headers, data, function(res, code, response) {
+		//Parse the JSON
+		try {
+			response = JSON.parse(response);
+		} catch(err) {
 			return callback(err, code, response);
 		}
 
@@ -499,8 +516,8 @@ resteasy.prototype.compare = function(schema, object, level) {
 
 					if(test) {
 						return next(keys);
-					} else throw new Error(level + ": Each value in array does not match array schema");
-				} else throw new Error(level + ": Value is not an array.");
+					} else throw new Error(_level + ": Each value in array does not match array schema");
+				} else throw new Error(_level + ": Value is not an array.");
 			} else if(value !== undefined) {
 
 				// Maybe we have a schema WITHIN a schema, in that case, do the entire thing again
@@ -513,11 +530,11 @@ resteasy.prototype.compare = function(schema, object, level) {
 					return next(keys);
 				} else {
 					// Test failed, return false
-					throw new Error(level + ": Value does not match type.");
+					throw new Error(_level + ": Value does not match type.");
 				}
 			} else {
 				// object doesn't have required property
-				throw new Error(key + ": Property does not exist.");	
+				throw new Error(_level + ": Property does not exist.");	
 			}
 		} else {
 			// We looped through and all tests passed
@@ -547,7 +564,7 @@ resteasy.prototype.isValue = function(type, value) {
 resteasy.prototype.toTypeString = function(type) {
 	if(type.toString().match(/(\w+)\(\)/)) return RegExp.$1;
 	else if(type instanceof RegExp) return type.toString();
-	else return "Unknown";
+	else return false;
 };
 
 /**
@@ -567,7 +584,7 @@ resteasy.prototype.prettySchema = function(schema) {
 
 			if(value.constructor == Object) object[key] = that.prettySchema(value);
 			else if(value.constructor == Array) object[key] = schema[key].map(that.prettySchema.bind(that));
-			else object[key] = that.toTypeString(value);
+			else object[key] = that.toTypeString(value) || value;
 
 			return next(keys);
 		} else {
@@ -608,12 +625,16 @@ resteasy.prototype.prettyResponse = function(response) {
 /**
  * Test definition API
  */
-resteasy.prototype.all = function(type, path, data) {
-	return (new resteasy.Test(this.queue)).all(type, path, data);
-};
 
-resteasy.prototype.describe = function(description) {
-    return (new resteasy.Test(this.queue)).describe(description);
+/**
+ * Bind a test case to a HTTP method
+ * @param  {String} method HTTP method
+ * @param  {String} path   URL path
+ * @param  {Object} data   Object data
+ * @return {resteasy.Test} New test case
+ */
+resteasy.prototype.all = function(method, path, data) {
+	return (new resteasy.Test(this.queue)).all(method, path, data);
 };
 
 //Function currying
@@ -621,6 +642,15 @@ resteasy.prototype.get = function(path, data) { return this.all("get", path, dat
 resteasy.prototype.post = function(path, data) { return this.all("post", path, data); };
 resteasy.prototype.put = function(path, data) { return this.all("put", path, data); };
 resteasy.prototype.delete = function(path, data) { return this.all("delete", path, data); };
+
+/**
+ * Describe a test case
+ * @param  {String} description Test Description
+ * @return {resteasy.Test}           New test
+ */
+resteasy.prototype.describe = function(description) {
+    return (new resteasy.Test(this.queue)).describe(description);
+};
 
 /**
  * Test report class
@@ -631,21 +661,36 @@ resteasy.Report = function() {
 	this.failed = [];
 };
 
+/**
+ * Pass a test
+ * @param  {resteasy.Test} test Passed test object.
+ * @return {null}      
+ */
 resteasy.Report.prototype.pass = function(test) {
 	this.tests.push(test);
 	this.passed.push(test);
 };
 
+/**
+ * Fail a test
+ * @param  {resteasy.test} test Failed test object.
+ * @return {null}      
+ */
 resteasy.Report.prototype.fail = function(test) {
 	this.tests.push(test);
 	this.failed.push(test);
 };
 
+/**
+ * Compile the report
+ * @return {Object} Compiled report.
+ */
 resteasy.Report.prototype.compile = function() {
 	return {
 		failed: this.failed.length,
 		passed: this.passed.length,
 		total: this.passed.length + this.failed.length,
+		duration: this.endTime - this.startTime,
 		tests: {
 			passed: this.passed,
 			failed: this.failed,
