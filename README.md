@@ -102,25 +102,25 @@ Add an event listener to the test suite. Below is a list of events and the detai
 		<th>Name</th><th>Description</th><th>Parameters</th>
 	</tr>
 	<tr>
-		<td>`start`</td><td>A new test has started.</td><td>test</td>
+		<td>start</td><td>A new test has started.</td><td>test</td>
 	</tr>
 	<tr>
-		<td>`pass`</td><td>A test has passed.</td><td>test, status, response</td>
+		<td>pass</td><td>A test has passed.</td><td>test, status, response</td>
 	</tr>
 	<tr>
-		<td>`fail`</td><td>A test has failed.</td><td>test, err, status, response</td>
+		<td>fail</td><td>A test has failed.</td><td>test, err, status, response</td>
 	</tr>
 	<tr>
-		<td>`finish`</td><td>A test has been completed.</td><td>test, err, status, response</td>
+		<td>finish</td><td>A test has been completed.</td><td>test, err, status, response</td>
 	</tr>
 	<tr>
-		<td>`begin`</td><td>Testing has begun.</td><td></td>
+		<td>begin</td><td>Testing has begun.</td><td></td>
 	</tr>
 	<tr>
-		<td>`end`</td><td>All tests have been completed.</td><td>report</td>
+		<td>end</td><td>All tests have been completed.</td><td>report</td>
 	</tr>
 	<tr>
-		<td>`paused`</td><td>Testing has been paused</td><td></td>
+		<td>paused</td><td>Testing has been paused</td><td></td>
 	</tr>
 </table>
 
