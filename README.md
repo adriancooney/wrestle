@@ -24,6 +24,8 @@ Resteasy tests can be executed from the command line by simple supplying the fil
 
 	$ resteasy test path/to/tests.js
 
+![Command line example](http://i.imgur.com/BFLhZ4V.png)
+
 ## Browser
 Resteasy tests can also be run in the browser. Define your tests and include `index.js`, `browser/interface.js` and the test file.
 
