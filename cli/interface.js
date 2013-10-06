@@ -6,37 +6,82 @@ var http = require("http"),
 /**
  * resteasy node HTTP interface
  */
-resteasy.httpRequest = function(url, method, data, callback) {
-	var headers = {};
+resteasy.httpRequest = function(url, method, headers, data, callback) {
+	headers = headers || {};
 	url = URL.parse(url);
 	method = method.toLowerCase();
 
+	var requestData = (method !== "get" && data) ? resteasy.queryString(data) : "",
+		path = (method == "get" && data ? resteasy.toURL(url.path, data) : url.path);
+
 	if(data && method !== "get") {
-		headers["content-type"] = "application/x-www-form-urlencoded; charset=utf-8";
+		headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8";
+		headers["Content-Length"] = requestData.length;
+	}
+
+	//Set the host
+	headers["Host"] = url.hostname;
+
+	//Display the request debug
+	if(resteasy.DEBUG) {
+		var lines = [];
+
+		lines.push("DEBUG: Beginning request.".bold);
+		//Host
+		lines.push(method.toUpperCase() + " " + url.hostname + path);
+
+		//Headers
+		Object.keys(headers).forEach(function(header) {
+			lines.push(header + ": " + headers[header]);
+		});
+
+		//The data
+		lines.push(requestData);
+
+		lines.forEach(function(line) { console.log(("> " + line + " ").yellow.inverse); });
 	}
 
 	var request = http.request({
 		hostname: url.hostname,
 		port: url.port,
-		path: (method == "get" && data ? resteasy.toURL(url.path, data) : url.path),
+		path: path,
 		method: method.toUpperCase(),
 		headers: headers
 	}, function(res) {
 		res.setEncoding("utf8");
 		res.on("data", function(body) {
+
+			if(resteasy.DEBUG) {
+				var lines = [];
+				lines.push("DEBUG: Response.".bold);
+				lines.push("HTTP/" + res.httpVersion + " " + res.statusCode);
+
+				//Headers
+				Object.keys(res.headers).forEach(function(header) {
+					lines.push(header + ": " + res.headers[header]);
+				});
+
+				//The data
+				lines.push(body);
+
+				console.log(""); //New line
+				lines.forEach(function(line) { console.log(("> " + line + " ").yellow.inverse); });
+			}
+
 			try {
 				var json = JSON.parse(body);
-				callback(false, res.statusCode, json);
+				callback(false, res, res.statusCode, json);
 			} catch(err) {
-				callback(err, res.statusCode, body);
+				callback(err, res, res.statusCode, body);
 				resteasy.emit("error", err);
 			}
 		})
 	});
 
-	request.setTimeout(100);
+	request.setTimeout(10000);
 
-	request.write((method !== "get" && data) ? resteasy.queryString(data) : "");
+	//Send the request
+	request.write(requestData);
 	request.end();
 
 	request.on("error", function(err) {

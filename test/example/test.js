@@ -13,6 +13,10 @@ resteasy.response.schema("post", 200, {
 	}
 });
 
+resteasy.headers.schema("post", {
+	"x-lol": "Adrian"
+})
+
 /*
  * Define some example data
  */

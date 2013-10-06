@@ -138,6 +138,9 @@ Add an event listener to the test suite. Below is a list of events and the detai
 	<tr>
 		<td>paused</td><td>Testing has been paused</td><td></td>
 	</tr>
+	<tr>
+		<td>error</td><td>An error has occured.</td><td></td>
+	</tr>
 </table>
 
 #### resteasy.begin( _[x, y, x] | [upper, lower]_ )
@@ -173,6 +176,9 @@ RESTEasy can compile your API spec into some pretty informative documentation. I
 	</tr>
 	<tr>
 		<td>rule.response</td><td>Respone recieved from request.</td>
+	</tr>
+	<tr>
+		<td>version</td><td>The current version of RestEasy</td>
 	</tr>
 </table>
 

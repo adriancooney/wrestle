@@ -12,6 +12,8 @@ var fs = require("fs"),
 // Global for the test files
 global.resteasy = require("../cli/interface.js");
 
+if(argv.debug) resteasy.DEBUG = true;
+
 switch(argv._[0]) {
     case "test":
         var filename = argv._[1];
@@ -97,7 +99,8 @@ function help() {
         "    --i x, y, z\t\t Run tests x, y, z only",
         "  doc <file> \t\t Output API documentation",
         "    --theme <theme>\t Output documentation with theme from doc/theme/",
-        "    --output <path>\t Specify output path for documentation. Defaults to test file directory."
+        "    --output <path>\t Specify output path for documentation. Defaults to test file directory.",
+        "  --debug \t\t Enable debug mode. Outputs request and response headers amoung other things."
     ].forEach(function(line) {
         console.log(line);
     });

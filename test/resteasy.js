@@ -110,6 +110,24 @@ describe("resteasy", function() {
 		});
 	});
 
+	describe("#setCookie", function() {
+		it("should store a cookie", function() {
+			resteasy.setCookie("rawr=1");
+			resteasy.setCookie("foo=1; bar=1");
+
+			assert.equal(resteasy.retrieve("cookie"), "rawr=1;foo=1");
+		});
+
+		it("should overwrite a cookie", function() {
+			resteasy.define("cookie", ""); //Empty cookie
+			
+			resteasy.setCookie("foo=1");
+			resteasy.setCookie("foo=5");
+
+			assert.equal(resteasy.retrieve("cookie"), "foo=5");
+		});
+	});
+
 	describe("#compare", function() {
 		it("should compare the schema against object", function() {
 			var test = resteasy.compare({

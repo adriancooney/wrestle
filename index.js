@@ -28,8 +28,11 @@ var resteasy = function() {
 	this.response = {};
 	this.response.schema = this.schema.bind(this, "response");
 
-	this.request = {};
-	this.request.schema = this.schema.bind(this, "request");
+    this.request = {};
+    this.request.schema = this.schema.bind(this, "request");
+
+    this.headers = {};
+    this.headers.schema = this.schema.bind(this, "header");
 };
 
 /**
@@ -360,12 +363,16 @@ resteasy.prototype.test = function(test, callback) {
 
 	if(!baseurl) throw new Error("Base url is not defined. Use resteasy.define('url', base_url).");
 
-	var requestSchema = this.compileSchema(test, "request");
+    var requestSchema = this.compileSchema(test, "request"),
+	    headersSchema = this.compileSchema(test, "Headers");
 
 	try {
 		// Merge the requestSchema with the test.data and expand the variables
 		var data = this.expand(this.merge(this.clone(test.parameters), requestSchema));
         test.data = data;
+
+        //Set the headers
+        test.headers = this.compileHeaders(headersSchema);
 
 		//Format the url
 		var path = this.format(test.path);
@@ -373,16 +380,20 @@ resteasy.prototype.test = function(test, callback) {
 		return callback(err);
 	}
 
-	this.httpRequest(baseurl + path, test.method, data, function(err, code, response) {
+	this.httpRequest(baseurl + path, test.method, test.headers, data, function(err, res, code, response) {
 		if(err) {
 			return callback(err, code, response);
 		}
+
+        //If there's a cookie, set it
+        if(res.headers["set-cookie"]) res.headers["set-cookie"].forEach(that.setCookie.bind(that));
 
         //Set the test status
         test.status = code;
         //Test the status code, break if they don't match
         if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), code, response);
 
+        //Test the reponse against the schema
         var responseSchema = that.compileSchema(test, "response");
         //Merge the response schema with the expectation
         if(test.schema) responseSchema = that.expand(that.merge(test.schema, responseSchema));
@@ -403,12 +414,54 @@ resteasy.prototype.test = function(test, callback) {
  * The main HTTP interface for outside interaction to be defined elsewhere.
  * @param  {String}   url      URL string
  * @param  {String}   method   HTTP method
+ * @param  {Object}   headers     Headers object
  * @param  {Object}   data     Data to be sent alongside the request
  * @param  {Function} callback Callback with (err, statusCode, responseData)
  * @return {null}            
  */
-resteasy.prototype.httpRequest = function(url, method, data, callback) {
+resteasy.prototype.httpRequest = function(url, method, headers, data, callback) {
 	throw new Error("resteasy#httpRequest is not defined. Please include an interface.js for the specific enviornment.");
+};
+
+/**
+ * Set a cookie for later requests
+ * @param {String} cookie Cookie string.
+ */
+resteasy.prototype.setCookie = function(cookie) {
+    var valRegex = /([^=]+)=([^=]+)/,
+        cookies = (this.retrieve("cookie") || "").split(";"),
+        store = {};
+
+    //Split up the passed cookie, take the first value and find the name and value
+    cookie = valRegex.exec(cookie.split(";")[0]);
+
+    //Create a key value store for the current cookies
+    cookies.forEach(function(nookie) {
+        nookie = valRegex.exec(nookie);
+
+        if(nookie) store[nookie[1]] = nookie[2];
+    });
+
+    //Save or overwrite the cookie
+    if(cookie) store[cookie[1]] = cookie[2];
+
+    //Stringify the cookies
+    this.define("cookie", Object.keys(store).map(function(key) {
+        return key + "=" + store[key];
+    }).join(";"));
+};
+
+resteasy.prototype.compileHeaders = function(schema) {
+    var headers = this.expand(schema);
+
+    //Add the cookie
+    var cookie = this.retrieve("cookie");
+    if(cookie) test.headers["Cookie"] = cookie;
+
+    if(!headers["User-Agent"]) headers["User-Agent"] = "resteasy/1.0";
+    if(!headers["Accept"]) headers["Accept"] = "*/*";
+
+    return headers;
 };
 
 /**
