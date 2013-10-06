@@ -6,7 +6,7 @@ resteasy.define("url", "http://localhost:8181");
 /*
  * An API schema
  */
-resteasy.schema(200, {
+resteasy.response.schema("post", 200, {
 	meta: {
 		code: 200,
 		error: false

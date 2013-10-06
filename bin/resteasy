@@ -1,4 +1,4 @@
-#!/usr/bin/env node 
+#!/usr/bin/env node
 /*
  * resteasy -- A rest API testing suite
  *  test - Run the tests
@@ -133,8 +133,8 @@ function buildDoc(report, theme, output) {
                         return JSON.stringify(this.response, null, 4);
                     },
 
-                    "data_formatted": function() {
-                        return JSON.stringify(this.data, null, 4);
+                    "parameters_formatted": function() {
+                        return JSON.stringify(this.parameters, null, 4);
                     }
                 });
                 

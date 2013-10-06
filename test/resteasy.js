@@ -72,9 +72,11 @@ describe("resteasy", function() {
 
 	describe(".response#schema", function() {
 		it("should store a response schema", function() {
-			resteasy.response.schema("post", 200, {
+			resteasy.request.schema("post", {
 				success: true
 			});
+
+			assert(resteasy.store["schema.request.post.*"])
 		})
 	});
 

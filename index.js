@@ -135,9 +135,9 @@ resteasy.prototype.expand = function(object) {
  * @return {object}           The schema object
  */
 resteasy.prototype.schema = function(namespace, _type, _code, _object) {
-	var namespace, type, code, object;
+	var type, code, object;
 	if(typeof _type == "object" && !_code && !_object) object = _type;
-	if(typeof _type == "string" && typeof _code == "object" && !_object) object = _code;
+	if(typeof _type == "string" && typeof _code == "object" && !_object) type = _type, object = _code;
 	if(typeof _type == "number" && typeof _code == "object" && !_object) object = _code, code = _type;
 	if(typeof _type == "string" && typeof _code == "number" && typeof _object == "object") type = _type, code = _code, object = _object;
 
@@ -164,8 +164,8 @@ resteasy.prototype.compileSchema = function(test, namespace) {
 	var schemas = [
 		"*.*",
 		test.method + ".*",
-		"*." + test.code,
-		test.method + "." + test.code
+		"*." + test.status,
+		test.method + "." + test.status
 	].forEach(function(schema) {
 		var value = that.retrieve(name + schema);
 
@@ -360,15 +360,12 @@ resteasy.prototype.test = function(test, callback) {
 
 	if(!baseurl) throw new Error("Base url is not defined. Use resteasy.define('url', base_url).");
 
-	var requestSchema = this.compileSchema(test, "request"),
-		responseSchema = this.compileSchema(test, "response");
-
-	//Merge the response schema with the expectation
-	if(test.schema) responseSchema = that.merge(test.schema, responseSchema);
+	var requestSchema = this.compileSchema(test, "request");
 
 	try {
 		// Merge the requestSchema with the test.data and expand the variables
-		var data = this.expand(this.merge(this.clone(test.data), requestSchema));
+		var data = this.expand(this.merge(this.clone(test.parameters), requestSchema));
+        test.data = data;
 
 		//Format the url
 		var path = this.format(test.path);
@@ -381,8 +378,14 @@ resteasy.prototype.test = function(test, callback) {
 			return callback(err, code, response);
 		}
 
-		//Test the status code, break if they don't match
-		if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), code, response);
+        //Set the test status
+        test.status = code;
+        //Test the status code, break if they don't match
+        if(test.code && test.code !== code) return callback(new Error("Reponse status code did not matched required status code"), code, response);
+
+        var responseSchema = that.compileSchema(test, "response");
+        //Merge the response schema with the expectation
+        if(test.schema) responseSchema = that.expand(that.merge(test.schema, responseSchema));
 
 		try {
 			var result = that.compare(responseSchema, response);
@@ -441,7 +444,7 @@ resteasy.prototype.compare = function(schema, object, level) {
 						return next(keys);
 					} else throw new Error(level + ": Each value in array does not match array schema");
 				} else throw new Error(level + ": Value is not an array.");
-			} else if(value) {
+			} else if(value !== undefined) {
 
 				// Maybe we have a schema WITHIN a schema, in that case, do the entire thing again
 				// Other wise, test the type with the value
@@ -457,7 +460,7 @@ resteasy.prototype.compare = function(schema, object, level) {
 				}
 			} else {
 				// object doesn't have required property
-				throw new Error(level + ": Property does not exist.");	
+				throw new Error(key + ": Property does not exist.");	
 			}
 		} else {
 			// We looped through and all tests passed
@@ -553,10 +556,10 @@ resteasy.Test = function(queue) {
  * @param  {Object} data The data to pass to the server
  * @return {self}      
  */
-resteasy.Test.prototype.all = function(method, path, data) {
+resteasy.Test.prototype.all = function(method, path, parameters) {
 	this.method = method;
 	this.path = path;
-	this.data = data;
+	this.parameters = parameters;
 
 	return this;
 };
