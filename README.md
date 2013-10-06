@@ -45,7 +45,7 @@ resteasy.describe("Generate a random username")
 	});
 ```
 
-### resteasy._method_( _&lt;path>_, _&lt;data>_ )
+#### resteasy._method_( _&lt;path>_, _&lt;data>_ )
 Create a test case for a GET, PUT, POST or DELETE HTTP method. `path` can contain variables expanded by `resteasy.format`. `data` is the request data to be passed along to the server. Data specified alongside the GET method will be converted to URL parameters.
 
 ```js
@@ -55,7 +55,7 @@ resteasy.get("/user/foo").expect({
 });
 ```
 
-### _&lt;test>_.expect( _&lt;code>_, _&lt;responseSchema>_, _&lt;callback>_ )
+#### _&lt;test>_.expect( _&lt;code>_, _&lt;responseSchema>_, _&lt;callback>_ )
 Define the response schema for a test. `code` is the expected HTTP status code. `responseSchema` is the schema for the JSON response, see `resteasy.schema` for a full description on defining schemas.
 
 ```js
@@ -68,7 +68,7 @@ resteasy.get("/user/foo").expect({
 });
 ```
 
-### resteasy._&lt;request|response>_.schema( _&lt;method>_, _&lt;code>_, _&lt;responseSchema>_ )
+#### resteasy._&lt;request|response>_.schema( _&lt;method>_, _&lt;code>_, _&lt;responseSchema>_ )
 Define a schema for request data or JSON response that matches either the request method, HTTP status code or both. A schema is an object that defines a set of rules another a request or response object must conform to. Resteasy loops over the object and tests if the property exists in the schema and that the property's value is of the same type as the schema or matches a regular expression. Schemas can contain variables which will be replaced by values when the request is executed (variables are defined using `resteasy.define`).
 
 ```js
@@ -89,8 +89,49 @@ resteasy.request.schema("post", {
 });
 ```
 
-### resteasy.define( _&lt;name>_, _&lt;value>_ )
+#### resteasy.define( _&lt;name>_, _&lt;value>_ )
 Define a variable for use within schemas or paths which can be accessed using the `:` prefix.
+
+### Suite tools
+
+#### resteasy.on( _&lt;event>_, _&lt;callback>_ )
+Add an event listener to the test suite. Below is a list of events and the details sent to them.
+
+<table>
+	<tr>
+		<th>Name</th><th>Description</th><th>Parameters</th>
+	</tr>
+	<tr>
+		<td>`start`</td><td>A new test has started.</td><td>`resteasy.Test`</td>
+	</tr>
+	<tr>
+		<td>`pass`</td><td>A test has passed.</td><td>`resteasy.Test`, `code` (status code), `data` (response)</td>
+	</tr>
+	<tr>
+		<td>`fail`</td><td>A test has failed.</td><td>`resteasy.Test`, `err`, `code` (status code), `data` (response)</td>
+	</tr>
+	<tr>
+		<td>`finish`</td><td>A test has been completed.</td><td>`resteasy.Test`, `err`, `code` (status code), `data` (response)</td>
+	</tr>
+	<tr>
+		<td>`begin`</td><td>Testing has begun.</td><td></td>
+	</tr>
+	<tr>
+		<td>`end`</td><td>All tests have been completed.</td><td>`resteasy.Report`</td>
+	</tr>
+	<tr>
+		<td>`paused`</td><td>Testing has been paused</td><td></td>
+	</tr>
+</table>
+
+#### resteasy.begin( _[x, y, x] | [upper, lower]_ )
+Begin testing. Optionally pass in array of test indexs or bound to only run selected tests.
+
+#### resteasy.pause()
+Pause testing.
+
+#### resteasy.run()
+Resume testing.
 
 ## TODO
 * Create a GUI for the browser
