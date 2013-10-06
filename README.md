@@ -158,19 +158,19 @@ RESTEasy can compile your API spec into some pretty informative documentation. I
 		<td>rules</td><td>Array of API rules.</td>
 	</tr>
 	<tr>
-		<td>_rule_.method</td><td>API rule HTTP method.</td>
+		<td>rule.method</td><td>API rule HTTP method.</td>
 	</tr>
 	<tr>
-		<td>_rule_.path</td><td>Path with emphasis on variables.</td>
+		<td>rule.path</td><td>Path with emphasis on variables.</td>
 	</tr>
 	<tr>
-		<td>_rule_.description</td><td>Description of the API rule.</td>
+		<td>rule.description</td><td>Description of the API rule.</td>
 	</tr>
 	<tr>
-		<td>_rule_.parameters</td><td>Parameters sent along with request to the server.</td>
+		<td>rule.parameters</td><td>Parameters sent along with request to the server.</td>
 	</tr>
 	<tr>
-		<td>_rule_.response</td><td>Respone recieved from request.</td>
+		<td>rule.response</td><td>Respone recieved from request.</td>
 	</tr>
 </table>
 
