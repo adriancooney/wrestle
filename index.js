@@ -14,6 +14,7 @@ var resteasy = function() {
 			expect: true, //Show expectation
 			pass: true, //Show passes
 			response: true, //Show response
+			responseData: false,
 			fail: true, //Show fails
 			begin: true, //Show beginning message
 			report: true// Show report
@@ -449,6 +450,11 @@ resteasy.prototype.setCookie = function(cookie) {
     }).join(";"));
 };
 
+/**
+ * Compile the header object
+ * @param  {Object} schema Cookie schema to merge with
+ * @return {Object}        Compiled headers
+ */
 resteasy.prototype.compileHeaders = function(schema) {
     var headers = this.expand(schema);
 
@@ -540,7 +546,63 @@ resteasy.prototype.isValue = function(type, value) {
  */
 resteasy.prototype.toTypeString = function(type) {
 	if(type.toString().match(/(\w+)\(\)/)) return RegExp.$1;
+	else if(type instanceof RegExp) return type.toString();
 	else return "Unknown";
+};
+
+/**
+ * Pretty the schema object. Convert types to their Strings
+ * @param  {Object} schema Schema to prettify
+ * @return {Object}        Prettified schema
+ */
+resteasy.prototype.prettySchema = function(schema) {
+	if(!schema) return undefined;
+
+	var that = this, object = {};
+	return (function next(keys) {
+		var key = keys.shift();
+
+		if(key) {
+			var value = schema[key];
+
+			if(value.constructor == Object) object[key] = that.prettySchema(value);
+			else if(value.constructor == Array) object[key] = schema[key].map(that.prettySchema.bind(that));
+			else object[key] = that.toTypeString(value);
+
+			return next(keys);
+		} else {
+			return object;
+		}
+	})(Object.keys(schema));
+};
+
+/**
+ * Convert a response object to string. Shrink the arrays etc.
+ * @param  {Object} response Reponse object
+ * @return {Object}         Convert response object
+ */
+resteasy.prototype.prettyResponse = function(response) {
+	if(!response) return undefined;
+
+	var that = this, object = {};
+	return (function next(keys) {
+		var key = keys.shift();
+
+		if(key) {
+			var value = response[key];
+
+			if(value.constructor == Object) object[key] = that.prettyResponse(value);
+			else if(value.constructor == Array) object[key] = value.map(function(val, i, arr) {
+				if(i == 0 || i == (arr.length - 1)) return that.prettyResponse(val);
+				else if(i == 2) return "...";
+			}).filter(function(val) { return !!val; });
+			else object[key] = value;
+
+			return next(keys);
+		} else {
+			return object;
+		}
+	})(Object.keys(response));
 };
 
 /**

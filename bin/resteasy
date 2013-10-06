@@ -22,6 +22,7 @@ switch(argv._[0]) {
             try {
                 if(argv.report) display("report");
                 if(argv.simple) display("fail", "begin", "pass", "info", "report");
+                if(argv.response) resteasy.options.display.responseData = true;
 
                 // Import the tests
                 var file = require(process.cwd() + "/" + filename);
@@ -93,12 +94,13 @@ function help() {
         "resteasy -- Simple REST API testing",
         "  help \t\t\t Shows this help.",
         "  test <file> \t\t Run a test file.",
-        "    --simple  \t\t Simple output report",
-        "    --report  \t\t Just output report",
-        "    --i x..y   \t\t Run tests numbers x through to y",
-        "    --i x, y, z\t\t Run tests x, y, z only",
-        "  doc <file> \t\t Output API documentation",
-        "    --theme <theme>\t Output documentation with theme from doc/theme/",
+        "    --simple  \t\t Simple output report.",
+        "    --report  \t\t Just output the report.",
+        "    --response\t\t Display the response data.",
+        "    --i x..y   \t\t Run tests numbers x through to y.",
+        "    --i x, y, z\t\t Run tests x, y, z only.",
+        "  doc <file> \t\t Output API documentation.",
+        "    --theme <theme>\t Output documentation with theme from doc/theme/.",
         "    --output <path>\t Specify output path for documentation. Defaults to test file directory.",
         "  --debug \t\t Enable debug mode. Outputs request and response headers amoung other things."
     ].forEach(function(line) {

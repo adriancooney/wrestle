@@ -70,6 +70,48 @@ describe("resteasy", function() {
 		});
 	});
 
+	describe("#prettySchema", function() {
+		it("should convert a schema with types to a string'd object", function() {
+			resteasy.prettySchema({
+				name: String,
+				age: /\d+/,
+				array: [
+					{
+						name: String,
+						age: Number
+					}
+				]
+			});
+		});
+	});
+
+	describe("#prettyResponse", function() {
+		it("should convert a response object to better object", function() {
+			console.log(resteasy.prettyResponse({
+				name: "loopy",
+				array: [{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				},{
+					friend: "Anonymous"
+				}]
+			}));
+		});
+	});
+
 	describe(".response#schema", function() {
 		it("should store a response schema", function() {
 			resteasy.request.schema("post", {

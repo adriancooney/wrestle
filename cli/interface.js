@@ -72,6 +72,7 @@ resteasy.httpRequest = function(url, method, headers, data, callback) {
 				var json = JSON.parse(body);
 				callback(false, res, res.statusCode, json);
 			} catch(err) {
+				throw err;
 				callback(err, res, res.statusCode, body);
 				resteasy.emit("error", err);
 			}
@@ -104,11 +105,12 @@ resteasy.on("start", function(test) {
 	if(resteasy.options.display.info) console.log(("Test " + ("#" + (test.index + 1)).underline + ": ").magenta 
 		+ test.method.toUpperCase().blue + " " + test.path.cyan, test.parameters || "");
 
-	if(resteasy.options.display.expect) console.log("Expect:  ".magenta + (test.code || 200), (test.schema || ""));
+	if(resteasy.options.display.expect) console.log("Expect:  ".magenta + (test.code || 200), (resteasy.prettySchema(test.schema) || ""));
 });
 
 resteasy.on("finish", function(test, err, code, data) {
-	if(resteasy.options.display.response) console.log("Reponse:".magenta, code, data);
+	if(resteasy.options.display.response) console.log("Reponse:".magenta, code);
+	if(resteasy.options.display.responseData) console.log(JSON.stringify(resteasy.prettyResponse(data), null, 4));
 });
 
 resteasy.on("pass", function(test, code, data) {
