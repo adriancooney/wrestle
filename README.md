@@ -38,14 +38,14 @@ There are a couple of caveats however due to the Cross-Origin Resource Sharing (
 ```
 resteasy -- Simple REST API testing
   help 			 		Shows this help.
-  test &lt;file> 		Run a test file.
+  test <file> 			Run a test file.
     --simple  		 	Simple output report
     --report  		 	Just output report
     --i x..y   		 	Run tests numbers x through to y
     --i x, y, z		 	Run tests x, y, z only
-  doc &lt;file> 		Output API documentation
-    --theme &lt;theme>	Output documentation with theme from doc/theme/
-    --output &lt;path>	Specify output path for documentation. Defaults to test file directory.
+  doc <file> 			Output API documentation
+    --theme <theme>		Output documentation with theme from doc/theme/
+    --output <path>		Specify output path for documentation. Defaults to test file directory.
 ```
 
 ### Test defintion API
