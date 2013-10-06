@@ -34,6 +34,20 @@ There are a couple of caveats however due to the Cross-Origin Resource Sharing (
 3. Enable CORS in your API's headers.
 
 ## Documentation
+### Command line
+```
+resteasy -- Simple REST API testing
+  help 			 		Shows this help.
+  test &lt;file> 		Run a test file.
+    --simple  		 	Simple output report
+    --report  		 	Just output report
+    --i x..y   		 	Run tests numbers x through to y
+    --i x, y, z		 	Run tests x, y, z only
+  doc &lt;file> 		Output API documentation
+    --theme &lt;theme>	Output documentation with theme from doc/theme/
+    --output &lt;path>	Specify output path for documentation. Defaults to test file directory.
+```
+
 ### Test defintion API
 #### resteasy.describe( _&lt;string>_ )
 Describe a test case. This is the `description` variable in the documentation generator
