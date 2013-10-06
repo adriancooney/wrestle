@@ -147,5 +147,32 @@ Pause testing.
 #### resteasy.run()
 Resume testing.
 
+## Themes
+RESTEasy can compile your API spec into some pretty informative documentation. It does this with a Mustache templating system. As is matures, the more complex the data passed into the documentation but for now, it's fairly basic. Below is a table of all the variables passed into the theme. See the [Mustache.js documentation](https://github.com/janl/mustache.js/) for some help in theme formatting.
+
+<table>
+	<tr>
+		<td>Variable Name</td><td>Description</td>
+	</tr>
+	<tr>
+		<td>rules</td><td>Array of API rules.</td>
+	</tr>
+	<tr>
+		<td>_rule_.method</td><td>API rule HTTP method.</td>
+	</tr>
+	<tr>
+		<td>_rule_.path</td><td>Path with emphasis on variables.</td>
+	</tr>
+	<tr>
+		<td>_rule_.description</td><td>Description of the API rule.</td>
+	</tr>
+	<tr>
+		<td>_rule_.parameters</td><td>Parameters sent along with request to the server.</td>
+	</tr>
+	<tr>
+		<td>_rule_.response</td><td>Respone recieved from request.</td>
+	</tr>
+</table>
+
 ## TODO
 * Create a GUI for the browser

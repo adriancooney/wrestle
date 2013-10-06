@@ -116,7 +116,8 @@ function buildDoc(report, theme, output) {
                     if(test.pass && test.status === 200) {
                         test.method = test.method.toUpperCase();
                         test.path = test.path.replace(/(\:\w+)/g, "<em>$1</em>");
-                        test.parameters = test.schema;
+                        test.parameters = JSON.stringify(test.parameters, null, 4);
+                        test.response = JSON.stringify(test.response, null, 4);
 
                         return test;
                     }
@@ -127,15 +128,7 @@ function buildDoc(report, theme, output) {
                 //Run it through mustache
                 var doc = mustache.render(file, {
                     rules: tests,
-                    version: resteasy.version,
-
-                    "response_formatted": function() {
-                        return JSON.stringify(this.response, null, 4);
-                    },
-
-                    "parameters_formatted": function() {
-                        return JSON.stringify(this.parameters, null, 4);
-                    }
+                    version: resteasy.version
                 });
                 
                 // And write the file
