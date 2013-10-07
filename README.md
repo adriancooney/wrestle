@@ -63,7 +63,7 @@ wrestle -- Simple REST API testing
 
 ### Test defintion API
 #### wrestle.describe( _&lt;string>_ )
-Describe a test case. This is the `description` variable in the documentation generator
+Describe a test case. This is the `description` variable in the documentation generator. Desriptions are optional.
 
 ```js
 wrestle.describe("Generate a random username")
