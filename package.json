@@ -1,9 +1,9 @@
 {
-  "name": "resteasy",
+  "name": "wrestle",
   "version": "0.1.0",
   "description": "A REST API testing library.",
   "main": "index.js",
-  "repository": "https://github.com/dunxrion/RESTeasy.git",
+  "repository": "https://github.com/dunxrion/wrestle.git",
   "author": "Adrian Cooney",
   "license": "BSD",
   "dependencies": {
@@ -16,7 +16,7 @@
     "express": "latest"
   },
   "bin": {
-    "resteasy": "./bin/resteasy"
+    "wrestle": "./bin/wrestle"
   },
   "scripts": {
     "test": "mocha"

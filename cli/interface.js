@@ -1,18 +1,18 @@
 var http = require("http"),
 	URL = require("url"),
 	color = require("colors"),
-	resteasy = require("../index.js").resteasy;
+	wrestle = require("../index.js").wrestle;
 
 /**
- * resteasy node HTTP interface
+ * wrestle node HTTP interface
  */
-resteasy.httpRequest = function(url, method, headers, data, callback) {
+wrestle.httpRequest = function(url, method, headers, data, callback) {
 	headers = headers || {};
 	url = URL.parse(url);
 	method = method.toLowerCase();
 
-	var requestData = (method !== "get" && data) ? resteasy.queryString(data) : "",
-		path = (method == "get" && data ? resteasy.toURL(url.path, data) : url.path);
+	var requestData = (method !== "get" && data) ? wrestle.queryString(data) : "",
+		path = (method == "get" && data ? wrestle.toURL(url.path, data) : url.path);
 
 	if(data && method !== "get") {
 		headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8";
@@ -23,7 +23,7 @@ resteasy.httpRequest = function(url, method, headers, data, callback) {
 	headers["Host"] = url.hostname;
 
 	//Display the request debug
-	if(resteasy.DEBUG) {
+	if(wrestle.DEBUG) {
 		var lines = [];
 
 		lines.push("DEBUG: Beginning request.".bold);
@@ -51,7 +51,7 @@ resteasy.httpRequest = function(url, method, headers, data, callback) {
 		res.setEncoding("utf8");
 		res.on("data", function(body) {
 
-			if(resteasy.DEBUG) {
+			if(wrestle.DEBUG) {
 				var lines = [];
 				lines.push("DEBUG: Response.".bold);
 				lines.push("HTTP/" + res.httpVersion + " " + res.statusCode);
@@ -79,7 +79,7 @@ resteasy.httpRequest = function(url, method, headers, data, callback) {
 	request.end();
 
 	request.on("error", function(err) {
-		resteasy.emit("error", err);
+		wrestle.emit("error", err);
 	});
 };
 
@@ -87,32 +87,32 @@ resteasy.httpRequest = function(url, method, headers, data, callback) {
  * CLI Interface. All based on events.
  */
 
-resteasy.on("begin", function() {
-	if(resteasy.options.display.begin) console.log("Beginning tests.\n");
+wrestle.on("begin", function() {
+	if(wrestle.options.display.begin) console.log("Beginning tests.\n");
 });
 
-resteasy.on("end", function(report) {
-	if(resteasy.options.display.report) {
+wrestle.on("end", function(report) {
+	if(wrestle.options.display.report) {
 		console.log(report.tests.all.map(function(test) { return "*"[test.pass ? "green" : "red"]; }).join(""))
 		console.log("Testing complete in " + (report.duration/1000).toFixed(3) + "s.", (report.passed + " passed.").green, (report.failed + " failed.").red, report.total + " in total.");
 	}
 });
 
-resteasy.on("test", function(test) {
+wrestle.on("test", function(test) {
 	test.on("start", function() {
-		if(resteasy.options.display.info) console.log(("Test " + ("#" + (this.index + 1)).underline + ": ").magenta 
+		if(wrestle.options.display.info) console.log(("Test " + ("#" + (this.index + 1)).underline + ": ").magenta 
 			+ this.method.toUpperCase().blue + " " + this.path.cyan, this.parameters || "");
 
-		if(resteasy.options.display.expect) console.log("Expect:  ".magenta + (this.code || 200), (resteasy.prettySchema(this.schema) || ""));
+		if(wrestle.options.display.expect) console.log("Expect:  ".magenta + (this.code || 200), (wrestle.prettySchema(this.schema) || ""));
 	});
 
 	test.on("finish", function(err, code, data) {
-		if(resteasy.options.display.response) console.log("Reponse:".magenta, code);
-		if(resteasy.options.display.responseData) console.log(JSON.stringify(resteasy.prettyResponse(data), null, 4));
+		if(wrestle.options.display.response) console.log("Reponse:".magenta, code);
+		if(wrestle.options.display.responseData) console.log(JSON.stringify(wrestle.prettyResponse(data), null, 4));
 	});
 
 	test.on("pass", function(code, data) {
-		if(resteasy.options.display.pass) console.log(("Test passed. (" + (this.duration.toFixed(3)/1000) + "s)\n").green);
+		if(wrestle.options.display.pass) console.log(("Test passed. (" + (this.duration.toFixed(3)/1000) + "s)\n").green);
 	});
 
 	test.on("fail", function(err, code, data) {
@@ -123,13 +123,13 @@ resteasy.on("test", function(test) {
 			break;
 		}
 
-		if(resteasy.options.display.fail) {
+		if(wrestle.options.display.fail) {
 			console.log(("Test failed. (" + (this.duration.toFixed(3)/1000) + "s)\n").red + err.message.red.inverse, "\n");
 		}
 	});
 });
 
-resteasy.on("error", function(err) {
+wrestle.on("error", function(err) {
 	var msg = err.toString().replace(/^Error\:/, "");
 
 	switch(err.code || err.type) {
@@ -145,4 +145,4 @@ resteasy.on("error", function(err) {
 	console.log(("\nError: " + msg + (err.code ? ", " + err.code : "")).red.inverse);
 })
 
-module.exports = resteasy;
+module.exports = wrestle;

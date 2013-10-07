@@ -1,7 +1,7 @@
 (function(exports) {
 "use strict";
 
-var resteasy = function() {
+var wrestle = function() {
 	this.store = {};
 	this.events = {};
 	this.queue = [];
@@ -37,23 +37,23 @@ var resteasy = function() {
 };
 
 /**
- * Add event listener to resteasy object
+ * Add event listener to wrestle object
  * @param {string}   name     Name of event
  * @param {Function} callback Callback function
  */	
-resteasy.prototype.addEventListener = function(name, callback) {
+wrestle.prototype.addEventListener = function(name, callback) {
 	if(typeof name == "function") this.events["*"] = name;
 	else this.events[name] = callback;
 };
 
-resteasy.prototype.on = resteasy.prototype.addEventListener;
+wrestle.prototype.on = wrestle.prototype.addEventListener;
 
 /**
- * Emit an event on the resteasy object
+ * Emit an event on the wrestle object
  * @param  {string} name Event Name
  * @param  {*[, ..]} Arguments to pass to callback
  */
-resteasy.prototype.emit = function() {
+wrestle.prototype.emit = function() {
 	var args = Array.prototype.slice.call(arguments),
 		name = args[0],
 		data = args.slice(1);
@@ -63,12 +63,12 @@ resteasy.prototype.emit = function() {
 };
 
 /**
- * Some sugar for resteasy.store[name] = value
+ * Some sugar for wrestle.store[name] = value
  * @param  {string} name  Var name
  * @param  {*} value Value to store
  * @return {*}       Value stored
  */
-resteasy.prototype.define = function(name, value) {
+wrestle.prototype.define = function(name, value) {
 	if(typeof name == "object") {
 		for(var key in name) {
 			this.store[key] = name[key];
@@ -77,11 +77,11 @@ resteasy.prototype.define = function(name, value) {
 };
 
 /**
- * Proxy for resteasy.store[name]
+ * Proxy for wrestle.store[name]
  * @param  {string} name Variable name
  * @return {*}      The stored value
  */
-resteasy.prototype.retrieve = function(name) {
+wrestle.prototype.retrieve = function(name) {
 	return this.store[name];
 };
 
@@ -90,7 +90,7 @@ resteasy.prototype.retrieve = function(name) {
  * @param  {string} string The string to format
  * @return {string}        The formatted string
  */
-resteasy.prototype.format = function(string) {
+wrestle.prototype.format = function(string) {
 	var that = this;
 	return typeof string == "string" ? string.replace(/\:(\w+)/g, function(match, name) {
 		var value = that.retrieve(name);
@@ -105,7 +105,7 @@ resteasy.prototype.format = function(string) {
  * @param  {Object} object 
  * @return {Object}        The expanded object
  */
-resteasy.prototype.expand = function(object) {
+wrestle.prototype.expand = function(object) {
 	var that = this;
 	return (function next(keys) {
 		var key = keys.shift();
@@ -138,7 +138,7 @@ resteasy.prototype.expand = function(object) {
  * @param  {object} object    The response object
  * @return {object}           The schema object
  */
-resteasy.prototype.schema = function(namespace, _type, _code, _object) {
+wrestle.prototype.schema = function(namespace, _type, _code, _object) {
 	var type, code, object;
 	if(typeof _type == "object" && !_code && !_object) object = _type;
 	if(typeof _type == "string" && typeof _code == "object" && !_object) type = _type, object = _code;
@@ -156,11 +156,11 @@ resteasy.prototype.schema = function(namespace, _type, _code, _object) {
 
 /**
  * Compile a schema given a test
- * @param  {resteasy.Test} test The test to compile from
+ * @param  {wrestle.Test} test The test to compile from
  * @param {String} namespace The namespace to compile from
  * @return {Object}      The compiled, merged schema
  */
-resteasy.prototype.compileSchema = function(test, namespace) {
+wrestle.prototype.compileSchema = function(test, namespace) {
 	var that = this,
 		name = "schema." + namespace + ".",
 		main = {};
@@ -185,7 +185,7 @@ resteasy.prototype.compileSchema = function(test, namespace) {
  * @param  {Object} object 
  * @return {Object}        Merged object
  */
-resteasy.prototype.merge = function(host, object) {
+wrestle.prototype.merge = function(host, object) {
 	for(var key in object) host[key] = object[key];
 
 	return host;
@@ -196,7 +196,7 @@ resteasy.prototype.merge = function(host, object) {
  * @param  {Object} object 
  * @return {Object}        
  */
-resteasy.prototype.clone = function(object) {
+wrestle.prototype.clone = function(object) {
     return this.merge({}, object);
 };
 
@@ -206,14 +206,14 @@ resteasy.prototype.clone = function(object) {
  * @param  {object} parameters Parameters as object
  * @return {string}            URL with encoded parameters
  */
-resteasy.prototype.toURL = function(base, parameters) {
+wrestle.prototype.toURL = function(base, parameters) {
 	return base + (/\?/.test(base) ? "&" : "?") + this.queryString(parameters);
 };
 
 /**
  * Convert an object to a queryString
  * Example input:
- * 	resteasy.queryString({
+ * 	wrestle.queryString({
  * 		a: 1, 
  * 		b: {
  * 			r: [2, 3, 1, 2],
@@ -231,7 +231,7 @@ resteasy.prototype.toURL = function(base, parameters) {
  * @param  {String} queryString @private, for recursion
  * @return {String}             The query string
  */
-resteasy.prototype.queryString = function(object, parent, queryString) {
+wrestle.prototype.queryString = function(object, parent, queryString) {
 	queryString = queryString || "";
 	var that = this;
 	return (function next(keys) {
@@ -258,9 +258,9 @@ resteasy.prototype.queryString = function(object, parent, queryString) {
 /*
  * Suite tools
  */
-resteasy.prototype.initSuite = function() {
+wrestle.prototype.initSuite = function() {
 	this.buffer = this.queue.slice(0);
-	this.report = new resteasy.Report;
+	this.report = new wrestle.Report;
 	this.count = 0;
 };
 
@@ -269,7 +269,7 @@ resteasy.prototype.initSuite = function() {
  * @param  {Number|Array} bounds Number, [upper, lower], [specific, test, indexes]
  * @return {null}        
  */
-resteasy.prototype.selectTests = function(bounds) {
+wrestle.prototype.selectTests = function(bounds) {
 	if(typeof bounds == "number" || bounds.length == 1) {
 		bounds = Array.isArray(bounds) ? bounds[0] : bounds;
 		bounds--;
@@ -288,7 +288,7 @@ resteasy.prototype.selectTests = function(bounds) {
  * Start the testing suite
  * @return {null}
  */
-resteasy.prototype.begin = function() {
+wrestle.prototype.begin = function() {
 	this.initSuite();
 
 	//Apply the selection
@@ -305,7 +305,7 @@ resteasy.prototype.begin = function() {
  * Pause the testing suite (to resume, use #run)
  * @return {null} 
  */
-resteasy.prototype.pause = function() {
+wrestle.prototype.pause = function() {
 	this.emit("paused");
 	this.running = false;
 };
@@ -314,7 +314,7 @@ resteasy.prototype.pause = function() {
  * Run the testing suite
  * @return {null} 
  */
-resteasy.prototype.run = function() {
+wrestle.prototype.run = function() {
 	var that = this;
 	that.running = true;
 
@@ -374,15 +374,15 @@ resteasy.prototype.run = function() {
 
 /**
  * Main test function
- * @param  {resteasy.Test}   test     Resteasy test function
+ * @param  {wrestle.Test}   test     wrestle test function
  * @param  {Function} callback Callback (err, response)
  * @return {null}            
  */
-resteasy.prototype.test = function(test, callback) {
+wrestle.prototype.test = function(test, callback) {
 	var that = this,
 		baseurl = this.retrieve("url");
 
-	if(!baseurl) throw new Error("Base url is not defined. Use resteasy.define('url', base_url).");
+	if(!baseurl) throw new Error("Base url is not defined. Use wrestle.define('url', base_url).");
 
     var requestSchema = this.compileSchema(test, "request"),
 	    headersSchema = this.compileSchema(test, "headers");
@@ -443,15 +443,15 @@ resteasy.prototype.test = function(test, callback) {
  * @param  {Function} callback Callback with (err, statusCode, responseData)
  * @return {null}            
  */
-resteasy.prototype.httpRequest = function(url, method, headers, data, callback) {
-	throw new Error("resteasy#httpRequest is not defined. Please include an interface.js for the specific enviornment.");
+wrestle.prototype.httpRequest = function(url, method, headers, data, callback) {
+	throw new Error("wrestle#httpRequest is not defined. Please include an interface.js for the specific enviornment.");
 };
 
 /**
  * Set a cookie for later requests
  * @param {String} cookie Cookie string.
  */
-resteasy.prototype.setCookie = function(cookie) {
+wrestle.prototype.setCookie = function(cookie) {
     var valRegex = /([^=]+)=([^=]+)/,
         cookies = (this.retrieve("cookie") || "").split(";"),
         store = {};
@@ -480,14 +480,14 @@ resteasy.prototype.setCookie = function(cookie) {
  * @param  {Object} schema Cookie schema to merge with
  * @return {Object}        Compiled headers
  */
-resteasy.prototype.compileHeaders = function(schema) {
+wrestle.prototype.compileHeaders = function(schema) {
     var headers = this.expand(schema);
 
     //Add the cookie
     var cookie = this.retrieve("cookie");
     if(cookie) test.headers["Cookie"] = cookie;
 
-    if(!headers["User-Agent"]) headers["User-Agent"] = "resteasy/1.0";
+    if(!headers["User-Agent"]) headers["User-Agent"] = "wrestle/1.0";
     if(!headers["Accept"]) headers["Accept"] = "*/*";
 
     return headers;
@@ -500,7 +500,7 @@ resteasy.prototype.compileHeaders = function(schema) {
  * @param  {String} level  The object level
  * @return {Boolean}       Schema works
  */
-resteasy.prototype.compare = function(schema, object, level) {
+wrestle.prototype.compare = function(schema, object, level) {
 	var that = this;
 	return (function next(keys) {
 		var key = keys.shift();
@@ -558,7 +558,7 @@ resteasy.prototype.compare = function(schema, object, level) {
  * @param  {*}  value The value to test against
  * @return {Boolean}       The test results
  */
-resteasy.prototype.isValue = function(type, value) {
+wrestle.prototype.isValue = function(type, value) {
 	return (value.constructor == type) 
 		|| ((type instanceof RegExp) ? (function() { return type.test(value) }) : (function() { return false; }))() 
 		|| type == value;
@@ -569,7 +569,7 @@ resteasy.prototype.isValue = function(type, value) {
  * @param  {*} type Any type. `Boolean`, `String` etc.
  * @return {String}      The type
  */
-resteasy.prototype.toTypeString = function(type) {
+wrestle.prototype.toTypeString = function(type) {
 	if(type.toString().match(/(\w+)\(\)/)) return RegExp.$1;
 	else if(type instanceof RegExp) return type.toString();
 	else return false;
@@ -580,7 +580,7 @@ resteasy.prototype.toTypeString = function(type) {
  * @param  {Object} schema Schema to prettify
  * @return {Object}        Prettified schema
  */
-resteasy.prototype.prettySchema = function(schema) {
+wrestle.prototype.prettySchema = function(schema) {
 	if(!schema) return undefined;
 
 	var that = this, object = {};
@@ -606,7 +606,7 @@ resteasy.prototype.prettySchema = function(schema) {
  * @param  {Object} response Reponse object
  * @return {Object}         Convert response object
  */
-resteasy.prototype.prettyResponse = function(response) {
+wrestle.prototype.prettyResponse = function(response) {
 	if(!response) return undefined;
 
 	var that = this, object = {};
@@ -639,31 +639,31 @@ resteasy.prototype.prettyResponse = function(response) {
  * @param  {String} method HTTP method
  * @param  {String} path   URL path
  * @param  {Object} data   Object data
- * @return {resteasy.Test} New test case
+ * @return {wrestle.Test} New test case
  */
-resteasy.prototype.all = function(method, path, data) {
-	return (new resteasy.Test(this.queue)).all(method, path, data);
+wrestle.prototype.all = function(method, path, data) {
+	return (new wrestle.Test(this.queue)).all(method, path, data);
 };
 
 //Function currying
-resteasy.prototype.get = function(path, data) { return this.all("get", path, data); };
-resteasy.prototype.post = function(path, data) { return this.all("post", path, data); };
-resteasy.prototype.put = function(path, data) { return this.all("put", path, data); };
-resteasy.prototype.delete = function(path, data) { return this.all("delete", path, data); };
+wrestle.prototype.get = function(path, data) { return this.all("get", path, data); };
+wrestle.prototype.post = function(path, data) { return this.all("post", path, data); };
+wrestle.prototype.put = function(path, data) { return this.all("put", path, data); };
+wrestle.prototype.delete = function(path, data) { return this.all("delete", path, data); };
 
 /**
  * Describe a test case
  * @param  {String} description Test Description
- * @return {resteasy.Test}           New test
+ * @return {wrestle.Test}           New test
  */
-resteasy.prototype.describe = function(description) {
-    return (new resteasy.Test(this.queue)).describe(description);
+wrestle.prototype.describe = function(description) {
+    return (new wrestle.Test(this.queue)).describe(description);
 };
 
 /**
  * Test report class
  */
-resteasy.Report = function() {
+wrestle.Report = function() {
 	this.tests = [];
 	this.passed = [];
 	this.failed = [];
@@ -671,20 +671,20 @@ resteasy.Report = function() {
 
 /**
  * Pass a test
- * @param  {resteasy.Test} test Passed test object.
+ * @param  {wrestle.Test} test Passed test object.
  * @return {null}      
  */
-resteasy.Report.prototype.pass = function(test) {
+wrestle.Report.prototype.pass = function(test) {
 	this.tests.push(test);
 	this.passed.push(test);
 };
 
 /**
  * Fail a test
- * @param  {resteasy.test} test Failed test object.
+ * @param  {wrestle.test} test Failed test object.
  * @return {null}      
  */
-resteasy.Report.prototype.fail = function(test) {
+wrestle.Report.prototype.fail = function(test) {
 	this.tests.push(test);
 	this.failed.push(test);
 };
@@ -693,7 +693,7 @@ resteasy.Report.prototype.fail = function(test) {
  * Compile the report
  * @return {Object} Compiled report.
  */
-resteasy.Report.prototype.compile = function() {
+wrestle.Report.prototype.compile = function() {
 	return {
 		failed: this.failed.length,
 		passed: this.passed.length,
@@ -710,7 +710,7 @@ resteasy.Report.prototype.compile = function() {
 /**
  * Test class
  */
-resteasy.Test = function(queue) {
+wrestle.Test = function(queue) {
 	this.queue = queue;
 	this.index = this.queue.length;
 	this.events = {};
@@ -719,8 +719,8 @@ resteasy.Test = function(queue) {
 /*
  * Sort of inherit an event emitter class
  */
-resteasy.Test.prototype.on = resteasy.prototype.on;
-resteasy.Test.prototype.emit = resteasy.prototype.emit;
+wrestle.Test.prototype.on = wrestle.prototype.on;
+wrestle.Test.prototype.emit = wrestle.prototype.emit;
 
 /**
  * Handle a HTTP method
@@ -729,7 +729,7 @@ resteasy.Test.prototype.emit = resteasy.prototype.emit;
  * @param  {Object} data The data to pass to the server
  * @return {self}      
  */
-resteasy.Test.prototype.all = function(method, path, parameters) {
+wrestle.Test.prototype.all = function(method, path, parameters) {
 	this.method = method;
 	this.path = path;
 	this.parameters = parameters;
@@ -738,10 +738,10 @@ resteasy.Test.prototype.all = function(method, path, parameters) {
 };
 
 // Proxying/currying for Test#all
-resteasy.Test.prototype.get = function(url, data) { return this.all("get", url, data); };
-resteasy.Test.prototype.post = function(url, data) { return this.all("post", url, data); };
-resteasy.Test.prototype.put = function(url, data) { return this.all("put", url, data); };
-resteasy.Test.prototype.delete = function(url, data) { return this.all("delete", url, data); };
+wrestle.Test.prototype.get = function(url, data) { return this.all("get", url, data); };
+wrestle.Test.prototype.post = function(url, data) { return this.all("post", url, data); };
+wrestle.Test.prototype.put = function(url, data) { return this.all("put", url, data); };
+wrestle.Test.prototype.delete = function(url, data) { return this.all("delete", url, data); };
 
 /**
  * Test expectation parameters
@@ -759,7 +759,7 @@ resteasy.Test.prototype.delete = function(url, data) { return this.all("delete",
  * @param  {Function} callback The callback
  * @return {[type]}           [description]
  */
-resteasy.Test.prototype.expect = function(_code, _schema, _callback) {
+wrestle.Test.prototype.expect = function(_code, _schema, _callback) {
 	var code = _code, schema = _schema, callback = _callback;
 
 	if(typeof _code == "object") schema = _code, callback = _schema;
@@ -778,7 +778,7 @@ resteasy.Test.prototype.expect = function(_code, _schema, _callback) {
  * @param  {String|Function} description Description of the test
  * @return {self}             
  */
-resteasy.Test.prototype.describe = function(description) {
+wrestle.Test.prototype.describe = function(description) {
     // Support function() {/* NEWLINES! */}
     if(typeof description == "function") description = description.toString().replace(/(^[^\n]*\n)|(\n\*\/\})/g, ""); 
 
@@ -791,7 +791,7 @@ resteasy.Test.prototype.describe = function(description) {
  * Compile the Test
  * @return {self} 
  */
-resteasy.Test.prototype.compile = function() {
+wrestle.Test.prototype.compile = function() {
 	//Add self to the queue
 	this.queue.push(this);
 
@@ -799,6 +799,6 @@ resteasy.Test.prototype.compile = function() {
 };
 
 
-exports.resteasy = new resteasy;
+exports.wrestle = new wrestle;
 
 })(typeof window == "undefined" ? module.exports : this.window); //Enable node/browser interoperability

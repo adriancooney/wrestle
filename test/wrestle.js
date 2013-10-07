@@ -1,49 +1,49 @@
 var assert = require("assert"),
-	resteasy = require("resteasy").resteasy;
+	wrestle = require("../index.js").wrestle;
 
-describe("resteasy", function() {
+describe("wrestle", function() {
 
 	describe("#define", function() {
 		it("should define 'url'", function() {
-			resteasy.define("url", "http://localhost:8181");
+			wrestle.define("url", "http://localhost:8181");
 		});
 	});
 
 	describe("#retrieve", function() {
 		it("should retrieve an existing variable", function() {
-			resteasy.define("name", "adrian");
-			assert.equal(resteasy.retrieve("name"), "adrian");
+			wrestle.define("name", "adrian");
+			assert.equal(wrestle.retrieve("name"), "adrian");
 		});
 
 		it("should retrieve an undefined variable", function() {
-			assert.equal(resteasy.retrieve("unknown"), undefined);
+			assert.equal(wrestle.retrieve("unknown"), undefined);
 		});
 	});
 
 	describe("#toURL", function() {
 		var base = "http://localhost/"
 		it("should encode a url with get parameters", function() {
-			assert.equal(resteasy.toURL(base, {foo: 1, bar: "blue"}), base + "?foo=1&bar=blue");
-			assert.equal(resteasy.toURL(base + "?data=null", {foo: 1, bar: "blue"}), base + "?data=null&foo=1&bar=blue")
+			assert.equal(wrestle.toURL(base, {foo: 1, bar: "blue"}), base + "?foo=1&bar=blue");
+			assert.equal(wrestle.toURL(base + "?data=null", {foo: 1, bar: "blue"}), base + "?data=null&foo=1&bar=blue")
 		})
 	});
 
 	describe("#format", function() {
 		it("should format with a defined variable", function() {
-			resteasy.define("walter", "heisenberg");
-			assert.equal(resteasy.format(":walter"), "heisenberg");
+			wrestle.define("walter", "heisenberg");
+			assert.equal(wrestle.format(":walter"), "heisenberg");
 		});
 
 		it("should throw an error for undefined variable", function() {
 			assert.throws(function() {
-				resteasy.format(":wut");
+				wrestle.format(":wut");
 			});
 		});
 	});
 
 	describe("#expand", function() {
 		it("should expand an object of variables", function() {
-			var o = resteasy.expand({
+			var o = wrestle.expand({
 				name: ":name"
 			});
 
@@ -53,18 +53,18 @@ describe("resteasy", function() {
 
 	describe("#schema", function() {
 		it("should store a schema", function() {
-			resteasy.schema("response", {});
-			resteasy.schema("response", "post", {});
-			resteasy.schema("response", 200, {});
-			resteasy.schema("response", "post", 200, {});
+			wrestle.schema("response", {});
+			wrestle.schema("response", "post", {});
+			wrestle.schema("response", 200, {});
+			wrestle.schema("response", "post", 200, {});
 		});
 
 		it("should merge two schema's matching the same parameters", function() {
-			resteasy.schema("response", {
+			wrestle.schema("response", {
 				a: String
 			});
 
-			resteasy.schema("response", {
+			wrestle.schema("response", {
 				b: String
 			});
 		});
@@ -72,7 +72,7 @@ describe("resteasy", function() {
 
 	describe("#prettySchema", function() {
 		it("should convert a schema with types to a string'd object", function() {
-			resteasy.prettySchema({
+			wrestle.prettySchema({
 				name: String,
 				age: /\d+/,
 				array: [
@@ -87,7 +87,7 @@ describe("resteasy", function() {
 
 	describe("#prettyResponse", function() {
 		it("should convert a response object to better object", function() {
-			console.log(resteasy.prettyResponse({
+			wrestle.prettyResponse({
 				name: "loopy",
 				array: [{
 					friend: "Anonymous"
@@ -108,35 +108,35 @@ describe("resteasy", function() {
 				},{
 					friend: "Anonymous"
 				}]
-			}));
+			});
 		});
 	});
 
 	describe(".response#schema", function() {
 		it("should store a response schema", function() {
-			resteasy.request.schema("post", {
+			wrestle.request.schema("post", {
 				success: true
 			});
 
-			assert(resteasy.store["schema.request.post.*"])
+			assert(wrestle.store["schema.request.post.*"])
 		})
 	});
 
 	describe("#compileSchema", function() {
 		it("should return a compiled schema for a specific test", function() {
-			resteasy.response.schema("post", 200, {
+			wrestle.response.schema("post", 200, {
 				success: true
 			});
 
-			resteasy.response.schema(200, {
+			wrestle.response.schema(200, {
 				name: "tom"
 			});
 
-			resteasy.response.schema(404, {
+			wrestle.response.schema(404, {
 				error: true
 			});
 
-			resteasy.response.schema({
+			wrestle.response.schema({
 				age: [{
 					name: String,
 					friends: [{
@@ -145,7 +145,7 @@ describe("resteasy", function() {
 				}]
 			});
 
-			var schema = resteasy.compileSchema({
+			var schema = wrestle.compileSchema({
 				code: 200,
 				type: "post"
 			}, "response");
@@ -154,25 +154,25 @@ describe("resteasy", function() {
 
 	describe("#setCookie", function() {
 		it("should store a cookie", function() {
-			resteasy.setCookie("rawr=1");
-			resteasy.setCookie("foo=1; bar=1");
+			wrestle.setCookie("rawr=1");
+			wrestle.setCookie("foo=1; bar=1");
 
-			assert.equal(resteasy.retrieve("cookie"), "rawr=1;foo=1");
+			assert.equal(wrestle.retrieve("cookie"), "rawr=1;foo=1");
 		});
 
 		it("should overwrite a cookie", function() {
-			resteasy.define("cookie", ""); //Empty cookie
+			wrestle.define("cookie", ""); //Empty cookie
 			
-			resteasy.setCookie("foo=1");
-			resteasy.setCookie("foo=5");
+			wrestle.setCookie("foo=1");
+			wrestle.setCookie("foo=5");
 
-			assert.equal(resteasy.retrieve("cookie"), "foo=5");
+			assert.equal(wrestle.retrieve("cookie"), "foo=5");
 		});
 	});
 
 	describe("#compare", function() {
 		it("should compare the schema against object", function() {
-			var test = resteasy.compare({
+			var test = wrestle.compare({
 				name: String,
 				age: Number,
 				friend: {
@@ -192,7 +192,7 @@ describe("resteasy", function() {
 		});
 
 		it("should compare schema with nested array schema", function() {
-			var test = resteasy.compare({
+			var test = wrestle.compare({
 				persons: [
 					{
 						name: String
@@ -215,7 +215,7 @@ describe("resteasy", function() {
 		});
 
 		it("should compare schema with nested array types", function() {
-			var test = resteasy.compare({
+			var test = wrestle.compare({
 				nums: [Number],
 				age: Number,
 				friend: [{
@@ -244,7 +244,7 @@ describe("resteasy", function() {
 
 		it("should throw an error for bad object vs schema", function() {
 			assert.throws(function() {
-				resteasy.compare({
+				wrestle.compare({
 					name: String
 				}, {
 					name: 1
@@ -255,22 +255,22 @@ describe("resteasy", function() {
 
 	describe("#toTypeString", function() {
 		it("should return the correct types", function() {
-			assert.equal(resteasy.toTypeString(String), "String");
-			assert.equal(resteasy.toTypeString(Function), "Function");
-			assert.equal(resteasy.toTypeString(Number), "Number");
-			assert.equal(resteasy.toTypeString(Array), "Array");
-			assert.equal(resteasy.toTypeString(Boolean), "Boolean");
+			assert.equal(wrestle.toTypeString(String), "String");
+			assert.equal(wrestle.toTypeString(Function), "Function");
+			assert.equal(wrestle.toTypeString(Number), "Number");
+			assert.equal(wrestle.toTypeString(Array), "Array");
+			assert.equal(wrestle.toTypeString(Boolean), "Boolean");
 		});
 	});
 
 	describe("#isType", function() {
 		it("should match types", function() {
-			assert.equal(resteasy.isValue(String, "string"), true);
-			assert.equal(resteasy.isValue(Array, []), true);
-			assert.equal(resteasy.isValue(Object, {}), true);
-			assert.equal(resteasy.isValue(Boolean, true), true);
-			assert.equal(resteasy.isValue(Number, 1), true);
-			assert.equal(resteasy.isValue(Boolean, 1), false);
+			assert.equal(wrestle.isValue(String, "string"), true);
+			assert.equal(wrestle.isValue(Array, []), true);
+			assert.equal(wrestle.isValue(Object, {}), true);
+			assert.equal(wrestle.isValue(Boolean, true), true);
+			assert.equal(wrestle.isValue(Number, 1), true);
+			assert.equal(wrestle.isValue(Boolean, 1), false);
 		})
 	});
 
@@ -278,21 +278,21 @@ describe("resteasy", function() {
 	describe("Test Definition API", function() {
 		this.timeout(15000);
 		it("should create a new test and add to the queue", function() {
-			var a = resteasy.post("/lol", {a : 1}).expect({}, function() {});
+			var a = wrestle.post("/lol", {a : 1}).expect({}, function() {});
 
-			assert(resteasy.queue[0]);
+			assert(wrestle.queue[0]);
 		});
 
 		it("should create a test and run it", function(done) {
-			var a = resteasy.get("/lolfoot", {a : 1}).expect(200, {}, function() {});
-			var a = resteasy.get("/toot").expect(404);
+			var a = wrestle.get("/lolfoot", {a : 1}).expect(200, {}, function() {});
+			var a = wrestle.get("/toot").expect(404);
 
-			resteasy.addEventListener("end", function(report) {
+			wrestle.addEventListener("end", function(report) {
 				console.log("Done!", report);
 				done();
 			});
 
-			resteasy.begin();
+			wrestle.begin();
 		});
 	}); */
 });

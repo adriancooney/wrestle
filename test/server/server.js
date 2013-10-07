@@ -1,5 +1,5 @@
 /*
- * Example server for Resteasy tests
+ * Example server for wrestle tests
  */
 var crypto = require("crypto"),
 	express = require("express"),

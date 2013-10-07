@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
- * resteasy -- A rest API testing suite
- *  test - Run the tests
+ * wrestle -- A rest API testing suite
+ * See `wrestle help` for usage
  */
 var fs = require("fs"),
     path = require("path"),
@@ -10,9 +10,9 @@ var fs = require("fs"),
     argv = require("optimist").argv;
 
 // Global for the test files
-global.resteasy = require("../cli/interface.js");
+global.wrestle = require("../cli/interface.js");
 
-if(argv.debug) resteasy.DEBUG = true;
+if(argv.debug) wrestle.DEBUG = true;
 
 switch(argv._[0]) {
     case "test":
@@ -22,7 +22,7 @@ switch(argv._[0]) {
             try {
                 if(argv.report) display("report");
                 if(argv.simple) display("fail", "begin", "pass", "info", "report");
-                if(argv.response) resteasy.options.display.responseData = true;
+                if(argv.response) wrestle.options.display.responseData = true;
 
                 // Import the tests
                 var file = require(process.cwd() + "/" + filename);
@@ -30,10 +30,10 @@ switch(argv._[0]) {
                 //Perform an selections
                 if(argv.i !== undefined) {
                     argv.i = argv.i.toString();
-                    if(/(\d+)\.\.(\d+)/.exec(argv.i)) resteasy.begin([RegExp.$1, RegExp.$2]);
-                    else resteasy.begin(argv._.slice(2).concat([argv.i.replace(",", "")]));
+                    if(/(\d+)\.\.(\d+)/.exec(argv.i)) wrestle.begin([RegExp.$1, RegExp.$2]);
+                    else wrestle.begin(argv._.slice(2).concat([argv.i.replace(",", "")]));
                 } else {
-                    resteasy.begin();
+                    wrestle.begin();
                 }
             } catch(e) {
                 if(e.code == "MODULE_NOT_FOUND") oops("Can't find test file.");
@@ -59,18 +59,18 @@ switch(argv._[0]) {
 
             console.log("Running tests..");
             //Bind on complete event listener
-            resteasy.on("end", function(report) {
+            wrestle.on("end", function(report) {
                 console.log("Tests complete. Building documentation..");
                 buildDoc(report, theme, output);
             });
 
             //Bind to errors
-            resteasy.on("error", function(err) {
+            wrestle.on("error", function(err) {
                 oops(err);
             });
 
             //Start testing
-            resteasy.begin();
+            wrestle.begin();
 
         } else oops("Please supply a test file.");
     break;
@@ -81,7 +81,7 @@ switch(argv._[0]) {
 }
 
 function display() {
-    for(var key in resteasy.options.display) resteasy.options.display[key] = Array.prototype.indexOf.call(arguments, key) !== -1;
+    for(var key in wrestle.options.display) wrestle.options.display[key] = Array.prototype.indexOf.call(arguments, key) !== -1;
 }
 
 function oops(message) {
@@ -91,7 +91,7 @@ function oops(message) {
 
 function help() {
     [
-        "resteasy -- Simple REST API testing",
+        "wrestle -- Simple REST API testing",
         "  help \t\t\t Shows this help.",
         "  test <file> \t\t Run a test file.",
         "    --simple  \t\t Simple output report.",
@@ -133,7 +133,7 @@ function buildDoc(report, theme, output) {
                 //Run it through mustache
                 var doc = mustache.render(file, {
                     rules: tests,
-                    version: resteasy.version
+                    version: wrestle.version
                 });
                 
                 // And write the file
