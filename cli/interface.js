@@ -83,6 +83,10 @@ resteasy.httpRequest = function(url, method, headers, data, callback) {
 	});
 };
 
+/*
+ * CLI Interface. All based on events.
+ */
+
 resteasy.on("begin", function() {
 	if(resteasy.options.display.begin) console.log("Beginning tests.\n");
 });
@@ -94,33 +98,35 @@ resteasy.on("end", function(report) {
 	}
 });
 
-resteasy.on("start", function(test) {
-	if(resteasy.options.display.info) console.log(("Test " + ("#" + (test.index + 1)).underline + ": ").magenta 
-		+ test.method.toUpperCase().blue + " " + test.path.cyan, test.parameters || "");
+resteasy.on("test", function(test) {
+	test.on("start", function() {
+		if(resteasy.options.display.info) console.log(("Test " + ("#" + (this.index + 1)).underline + ": ").magenta 
+			+ this.method.toUpperCase().blue + " " + this.path.cyan, this.parameters || "");
 
-	if(resteasy.options.display.expect) console.log("Expect:  ".magenta + (test.code || 200), (resteasy.prettySchema(test.schema) || ""));
-});
+		if(resteasy.options.display.expect) console.log("Expect:  ".magenta + (this.code || 200), (resteasy.prettySchema(this.schema) || ""));
+	});
 
-resteasy.on("finish", function(test, err, code, data) {
-	if(resteasy.options.display.response) console.log("Reponse:".magenta, code);
-	if(resteasy.options.display.responseData) console.log(JSON.stringify(resteasy.prettyResponse(data), null, 4));
-});
+	test.on("finish", function(err, code, data) {
+		if(resteasy.options.display.response) console.log("Reponse:".magenta, code);
+		if(resteasy.options.display.responseData) console.log(JSON.stringify(resteasy.prettyResponse(data), null, 4));
+	});
 
-resteasy.on("pass", function(test, code, data) {
-	if(resteasy.options.display.pass) console.log(("Test passed. (" + (test.duration.toFixed(3)/1000) + "s)\n").green);
-});
+	test.on("pass", function(code, data) {
+		if(resteasy.options.display.pass) console.log(("Test passed. (" + (this.duration.toFixed(3)/1000) + "s)\n").green);
+	});
 
-resteasy.on("fail", function(test, err, code, data) {
-	// Pretty error
-	switch(err.type) {
-		case "unexpected_token":
-			err.message = "Invalid JSON response."
-		break;
-	}
+	test.on("fail", function(err, code, data) {
+		// Pretty error
+		switch(err.type) {
+			case "unexpected_token":
+				err.message = "Invalid JSON response."
+			break;
+		}
 
-	if(resteasy.options.display.fail) {
-		console.log(("Test failed. (" + (test.duration.toFixed(3)/1000) + "s)\n").red + err.message.red.inverse, "\n");
-	}
+		if(resteasy.options.display.fail) {
+			console.log(("Test failed. (" + (this.duration.toFixed(3)/1000) + "s)\n").red + err.message.red.inverse, "\n");
+		}
+	});
 });
 
 resteasy.on("error", function(err) {

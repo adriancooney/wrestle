@@ -122,23 +122,14 @@ Define a variable for use within schemas or paths which can be accessed using th
 ### Suite tools
 
 #### resteasy.on( _&lt;event>_, _&lt;callback>_ )
-Add an event listener to the test suite. Below is a list of events and the details sent to them.
+Add an event listener to the test suite using `.on` or `.addEventListener`. Below is a list of events and the details sent to them.
 
 <table>
 	<tr>
 		<th>Name</th><th>Description</th><th>Parameters</th>
 	</tr>
 	<tr>
-		<td>start</td><td>A new test has started.</td><td>test</td>
-	</tr>
-	<tr>
-		<td>pass</td><td>A test has passed.</td><td>test, status, response</td>
-	</tr>
-	<tr>
-		<td>fail</td><td>A test has failed.</td><td>test, err, status, response</td>
-	</tr>
-	<tr>
-		<td>finish</td><td>A test has been completed.</td><td>test, err, status, response</td>
+		<td>test</td><td>A new test has begun testing.</td><td>test</td>
 	</tr>
 	<tr>
 		<td>begin</td><td>Testing has begun.</td><td></td>
@@ -151,6 +142,26 @@ Add an event listener to the test suite. Below is a list of events and the detai
 	</tr>
 	<tr>
 		<td>error</td><td>An error has occured.</td><td></td>
+	</tr>
+</table>
+
+Below is the list of events sent to a test. These can be binded to the test sent when the `test` event above is called.
+
+<table>
+	<tr>
+		<th>Name</th><th>Description</th><th>Parameters</th>
+	</tr>
+	<tr>
+		<td>start</td><td>A new test has started.</td>
+	</tr>
+	<tr>
+		<td>pass</td><td>A test has passed.</td><td>status, response</td>
+	</tr>
+	<tr>
+		<td>fail</td><td>A test has failed.</td><td>err, status, response</td>
+	</tr>
+	<tr>
+		<td>finish</td><td>A test has been completed.</td><td>err, status, response</td>
 	</tr>
 </table>
 

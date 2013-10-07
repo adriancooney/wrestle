@@ -327,7 +327,10 @@ resteasy.prototype.run = function() {
 			//Add the test start timestamp
 			test.startTime = new Date;
 
+			that.emit("test", test);
 			that.emit("start", test);
+			test.emit("start");
+
 			that.test(test, function(err, code, data) {
 				//Add the end timestamp
 				test.endTime = new Date;
@@ -339,14 +342,19 @@ resteasy.prototype.run = function() {
 
 				if(test.callback) test.callback(err, code, data);
 
+				test.emit("finish", err, code, data);
 				that.emit("finish", test, err, code, data);
 
 				if(!err) {
 					test.pass = true;
+
+					test.emit("pass", code, data);
 					that.emit("pass", test, code, data);
 					that.report.pass(test);
 				} else {
 					test.pass = false;
+
+					test.emit("fail", err, code, data);
 					that.emit("fail", test, err, code, data);
 					that.report.fail(test, err);
 				}
@@ -705,7 +713,14 @@ resteasy.Report.prototype.compile = function() {
 resteasy.Test = function(queue) {
 	this.queue = queue;
 	this.index = this.queue.length;
+	this.events = {};
 };
+
+/*
+ * Sort of inherit an event emitter class
+ */
+resteasy.Test.prototype.on = resteasy.prototype.on;
+resteasy.Test.prototype.emit = resteasy.prototype.emit;
 
 /**
  * Handle a HTTP method
