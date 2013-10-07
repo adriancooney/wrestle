@@ -175,7 +175,7 @@ Pause testing.
 Resume testing.
 
 ## Themes
-Wrestle can compile your API spec into some pretty informative documentation. It does this with a Mustache templating system. As is matures, more complex data will be passed into the documentation and maybe even a selection of templating engines but for now, it's fairly basic. Below is a table of all the variables passed into the theme. See the [Mustache.js documentation](https://github.com/janl/mustache.js/) for some help in theme formatting.
+Wrestle can compile your API spec into some pretty informative documentation. It does this with a Mustache templating system. As Wrestle matures, more complex data will be passed into the documentation and maybe even a selection of templating engines but for now, it's fairly basic. Below is a table of all the variables passed into the theme. See the [Mustache.js documentation](https://github.com/janl/mustache.js/) for some help in theme formatting.
 
 <table>
 	<tr>
