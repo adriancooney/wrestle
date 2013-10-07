@@ -62,7 +62,7 @@ wrestle.httpRequest = function(url, method, headers, data, callback) {
 				});
 
 				//The data
-				lines.push(body);
+				lines = lines.concat(body.split("\n"));
 
 				console.log(""); //New line
 				lines.forEach(function(line) { console.log(("> " + line + " ").yellow.inverse); });

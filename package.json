@@ -9,7 +9,7 @@
   "dependencies": {
     "optimist": "latest",
     "colors": "latest",
-    "mustache": "latest"
+    "handlebars": "latest"
   },
   "devDependencies": {
     "mocha": "latest",
