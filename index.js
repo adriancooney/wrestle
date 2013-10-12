@@ -103,15 +103,18 @@ wrestle.prototype.format = function(string) {
 /**
  * Expand an object with variables
  * @param  {Object} object 
+ * @param {Function} fn Manipulate the value before it's processed with a callback
  * @return {Object}        The expanded object
  */
-wrestle.prototype.expand = function(object) {
+wrestle.prototype.expand = function(object, fn) {
 	var that = this;
 	return (function next(keys) {
 		var key = keys.shift();
 
 		if(key) {
 			var value = object[key];
+
+			if(fn) value = fn(value, key, object);
 
 			if(value.constructor == Object) object[key] = that.expand(value);
 			else object[key] = that.format(value);
@@ -388,8 +391,13 @@ wrestle.prototype.test = function(test, callback) {
 	    headersSchema = this.compileSchema(test, "headers");
 
 	try {
-		// Merge the requestSchema with the test.data and expand the variables
-		var data = this.expand(this.merge(this.clone(test.parameters), requestSchema));
+		// Merge the requestSchema with the test.data and expand the variables, the expand the parameters
+		var data = this.expand(this.merge(this.clone(test.parameters), requestSchema), function(value, key, object) {
+			if(value.__WRESTLE_PARAMETER) {
+				return value.value;
+			} else return value;
+		});
+
         test.data = data;
 
         //Set the headers
@@ -572,7 +580,7 @@ wrestle.prototype.isValue = function(type, value) {
 wrestle.prototype.toTypeString = function(type) {
 	if(type.toString().match(/(\w+)\(\)/)) return RegExp.$1;
 	else if(type instanceof RegExp) return type.toString();
-	else return false;
+	else return type;
 };
 
 /**
@@ -590,9 +598,11 @@ wrestle.prototype.prettySchema = function(schema) {
 		if(key) {
 			var value = schema[key];
 
-			if(value.constructor == Object) object[key] = that.prettySchema(value);
-			else if(value.constructor == Array) object[key] = schema[key].map(that.prettySchema.bind(that));
-			else object[key] = that.toTypeString(value) || value;
+			if(value.constructor == Object) {
+				if(value.__WRESTLE_PARAMETER) object[key] = value.value; //Expand schema objects
+				else object[key] = that.prettySchema(value);
+			} else if(value.constructor == Array) object[key] = schema[key].map(that.prettySchema.bind(that));
+			else object[key] = that.toTypeString(value);
 
 			return next(keys);
 		} else {
@@ -606,7 +616,7 @@ wrestle.prototype.prettySchema = function(schema) {
  * @param  {Object} response Reponse object
  * @return {Object}         Convert response object
  */
-wrestle.prototype.prettyResponse = function(response) {
+wrestle.prototype.prettyResponse = function(response, hideDots) {
 	if(!response) return undefined;
 
 	var that = this, object = {};
@@ -619,7 +629,7 @@ wrestle.prototype.prettyResponse = function(response) {
 			if(value.constructor == Object) object[key] = that.prettyResponse(value);
 			else if(value.constructor == Array) object[key] = value.map(function(val, i, arr) {
 				if(i == 0 || i == (arr.length - 1)) return that.prettyResponse(val);
-				else if(i == 2) return "...";
+				else if(i == 2 && !hideDots) return "...";
 			}).filter(function(val) { return !!val; });
 			else object[key] = value;
 
@@ -642,6 +652,7 @@ wrestle.prototype.prettyResponse = function(response) {
  * @return {wrestle.Test} New test case
  */
 wrestle.prototype.all = function(method, path, data) {
+
 	return (new wrestle.Test(this.queue)).all(method, path, data);
 };
 
@@ -658,6 +669,31 @@ wrestle.prototype.delete = function(path, data) { return this.all("delete", path
  */
 wrestle.prototype.describe = function(description) {
     return (new wrestle.Test(this.queue)).describe(description);
+};
+
+/**
+ * Create a parameter object for better documentation.
+ *
+ * Usage: 
+ * 	app.post("/user", {
+ * 		name: wrestle.parameter({
+ * 			required: false, //Is the value required in the API call
+ * 	 		type: String, //The value type
+ * 			description: "The user's name",
+ * 			value: "Adrian" //The sample value to test with
+ * 		})
+ * 	});
+ * @param  {Object} object The parameter object
+ * @return {Object}        The new object
+ */
+wrestle.prototype.parameter = function(object) {
+	object.required = object.required == undefined ? false : object.required;
+	object.type = wrestle.prototype.toTypeString.call({}, object.type || (object.value ? (typeof object.value == "function" ? object.value : object.value.constructor) : undefined));
+
+	// Define a variable in the object that would be incredibly unlikely to already exist
+	// so that we can identify it as a parameter object
+	object["__WRESTLE_PARAMETER"] = true;
+	return object;
 };
 
 /**
@@ -730,9 +766,9 @@ wrestle.Test.prototype.emit = wrestle.prototype.emit;
  * @return {self}      
  */
 wrestle.Test.prototype.all = function(method, path, parameters) {
+	this.parameters = parameters;
 	this.method = method;
 	this.path = path;
-	this.parameters = parameters;
 
 	return this;
 };

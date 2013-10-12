@@ -253,6 +253,16 @@ describe("wrestle", function() {
 		});
 	});
 
+	describe("#parameter", function() {
+		it("should parameterize an object", function() {
+			var parameter = wrestle.parameter({
+				required: true
+			});
+
+			assert(parameter.__WRESTLE_PARAMETER);
+		});
+	});
+
 	describe("#toTypeString", function() {
 		it("should return the correct types", function() {
 			assert.equal(wrestle.toTypeString(String), "String");

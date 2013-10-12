@@ -101,7 +101,7 @@ wrestle.on("end", function(report) {
 wrestle.on("test", function(test) {
 	test.on("start", function() {
 		if(wrestle.options.display.info) console.log(("Test " + ("#" + (this.index + 1)).underline + ": ").magenta 
-			+ this.method.toUpperCase().blue + " " + this.path.cyan, this.parameters || "");
+			+ this.method.toUpperCase().blue + " " + this.path.cyan, wrestle.prettySchema(this.parameters) || "");
 
 		if(wrestle.options.display.expect) console.log("Expect:  ".magenta + (this.code || 200), (wrestle.prettySchema(this.schema) || ""));
 	});

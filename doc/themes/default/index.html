@@ -16,6 +16,7 @@
 		border-bottom: 1px solid #eee;
 		margin-bottom: 18px;
 		padding-bottom: 18px;
+		width: 100%;
 	}
 
 	.rule h1 {
@@ -34,6 +35,15 @@
 		color: purple;
 	}
 
+	.rule table tr td:first-child {
+		width: 40%;
+	}
+
+	.rule table tr td:nth-child(2) {
+		width: 20%;
+	}
+
+
 	pre {
 		background: #ddd;
 		border-radius: 8px;
@@ -49,8 +59,17 @@
 	<div class="rule">
 		<h1><strong>{{method}}</strong> <span>{{{path}}}</h1>
 		<p>{{description}}</p>
+		{{#if parameters}}
 		<h3>Parameters</h3>
-		<pre>{{{parameters}}}</pre>
+		<table>
+			{{#each parameters}}
+			<tr>
+				<td>{{name}} {{#unless required}}<em>(optional)</em>{{/unless}}</td>
+				<td>{{type}}</td>
+				<td>{{description}}</td>
+			{{/each}}
+		</table>
+		{{/if}}
 		<h3>Response</h3>
 		<pre>{{{response}}}</pre>
 	</div>

@@ -16,6 +16,7 @@
 		border-bottom: 1px solid #eee;
 		margin-bottom: 18px;
 		padding-bottom: 18px;
+		width: 100%;
 	}
 
 	.rule h1 {
@@ -34,6 +35,15 @@
 		color: purple;
 	}
 
+	.rule table tr td:first-child {
+		width: 40%;
+	}
+
+	.rule table tr td:nth-child(2) {
+		width: 20%;
+	}
+
+
 	pre {
 		background: #ddd;
 		border-radius: 8px;
@@ -45,15 +55,31 @@
 <body>
 <div class="wrapper">
 	<h1>API Documentation</h1>
+	
 	<div class="rule">
 		<h1><strong>POST</strong> <span>/user</h1>
 		<p>	Create a new user.</p>
+		
 		<h3>Parameters</h3>
-		<pre>{
-    "username": ":username",
-    "password": ":password",
-    "name": ":name"
-}</pre>
+		<table>
+			
+			<tr>
+				<td>username </td>
+				<td>/.*/</td>
+				<td>The username of the new user.</td>
+			
+			<tr>
+				<td>password <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+			<tr>
+				<td>name <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+		</table>
+		
 		<h3>Response</h3>
 		<pre>{
     "user": {
@@ -67,14 +93,26 @@
     }
 }</pre>
 	</div>
+	
 	<div class="rule">
 		<h1><strong>POST</strong> <span>/login</h1>
 		<p>Login and generate a session</p>
+		
 		<h3>Parameters</h3>
-		<pre>{
-    "username": ":username",
-    "password": ":password"
-}</pre>
+		<table>
+			
+			<tr>
+				<td>username <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+			<tr>
+				<td>password <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+		</table>
+		
 		<h3>Response</h3>
 		<pre>{
     "session": "eb3056f3d3938101e807e4717b067365",
@@ -89,15 +127,31 @@
     }
 }</pre>
 	</div>
+	
 	<div class="rule">
 		<h1><strong>PUT</strong> <span>/user/<em>:id</em></h1>
 		<p></p>
+		
 		<h3>Parameters</h3>
-		<pre>{
-    "username": ":username",
-    "password": "nope",
-    "session": ":session"
-}</pre>
+		<table>
+			
+			<tr>
+				<td>username <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+			<tr>
+				<td>password <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+			<tr>
+				<td>session <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+		</table>
+		
 		<h3>Response</h3>
 		<pre>{
     "user": {
@@ -112,13 +166,21 @@
     }
 }</pre>
 	</div>
+	
 	<div class="rule">
 		<h1><strong>DELETE</strong> <span>/user/<em>:id</em></h1>
 		<p></p>
+		
 		<h3>Parameters</h3>
-		<pre>{
-    "session": ":session"
-}</pre>
+		<table>
+			
+			<tr>
+				<td>session <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+		</table>
+		
 		<h3>Response</h3>
 		<pre>{
     "meta": {
@@ -127,13 +189,21 @@
     }
 }</pre>
 	</div>
+	
 	<div class="rule">
 		<h1><strong>GET</strong> <span>/preferences</h1>
 		<p></p>
+		
 		<h3>Parameters</h3>
-		<pre>{
-    "session": ":session"
-}</pre>
+		<table>
+			
+			<tr>
+				<td>session <em>(optional)</em></td>
+				<td>String</td>
+				<td></td>
+			
+		</table>
+		
 		<h3>Response</h3>
 		<pre>{
     "notifications": true,
@@ -143,29 +213,17 @@
     }
 }</pre>
 	</div>
+	
 	<div class="rule">
 		<h1><strong>GET</strong> <span>/users</h1>
 		<p></p>
-		<h3>Parameters</h3>
-		<pre></pre>
+		
 		<h3>Response</h3>
 		<pre>{
     "users": [
         {
             "username": "foo",
             "name": "Steve"
-        },
-        {
-            "username": "raw",
-            "name": "Thomas"
-        },
-        {
-            "username": "boo",
-            "name": "Adrian"
-        },
-        {
-            "username": "admin",
-            "name": "Johnny"
         },
         {
             "username": "mac",
@@ -178,6 +236,7 @@
     }
 }</pre>
 	</div>
+	
 	<p>Generated with wrestle 0.1</p>
 </div>
 </body>

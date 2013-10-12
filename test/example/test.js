@@ -29,7 +29,13 @@ wrestle.define({
 wrestle.describe(function() {/*
 	Create a new user.
 */}).post("/user", {
-	username: ":username",
+	username: wrestle.parameter({
+		required: true,
+		description: "The username of the new user.",
+		type: /.*/,
+		value: ":username"
+	}),
+
 	password: ":password",
 	name: ":name"
 }).expect({

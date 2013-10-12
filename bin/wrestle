@@ -5,7 +5,7 @@
  */
 var fs = require("fs"),
     path = require("path"),
-    mustache = require("mustache"),
+    handlebars = require("handlebars"),
     exec = require('child_process').exec,
     argv = require("optimist").argv;
 
@@ -121,8 +121,20 @@ function buildDoc(report, theme, output) {
                     if(test.pass && test.status === 200) {
                         test.method = test.method.toUpperCase();
                         test.path = test.path.replace(/(\:\w+)/g, "<em>$1</em>");
-                        test.parameters = JSON.stringify(test.parameters, null, 4);
-                        test.response = JSON.stringify(test.response, null, 4);
+                        test.response = JSON.stringify(wrestle.prettyResponse(test.response), null, 4);
+
+                        if(test.parameters) {
+                            test.parameters = Object.keys(test.parameters).map(function(name) {
+                                var parameter = test.parameters[name];
+                                if(!parameter.__WRESTLE_PARAMETER) parameter = wrestle.parameter({
+                                    value: parameter
+                                });
+
+                                parameter.name = name;
+
+                                return parameter;
+                            })
+                        }
 
                         return test;
                     }
@@ -131,10 +143,11 @@ function buildDoc(report, theme, output) {
                 });
 
                 //Run it through mustache
-                var doc = mustache.render(file, {
-                    rules: tests,
-                    version: wrestle.version
-                });
+                var template = handlebars.compile(file),
+                    doc = template({
+                        rules: tests,
+                        version: wrestle.version
+                    });
                 
                 // And write the file
                 fs.writeFile(output, doc, function(err) {
