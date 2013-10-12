@@ -44,7 +44,7 @@ There are a couple of caveats however due to the Cross-Origin Resource Sharing (
 
 1. Host and run the tests under the same domain as the API.
 2. Start Chrome with the `--disable-web-security` flag to disable the CORS security.
-3. Enable CORS in your API's headers.
+3. Enable CORS in your API's response headers.
 
 ## Documentation
 ### Command line
@@ -63,7 +63,7 @@ wrestle -- Simple REST API testing
 
 ### Test defintion API
 #### wrestle.describe( _&lt;string>_ )
-Describe a test case. This is the `description` variable in the documentation generator
+Describe a test case. This is the `description` variable in the documentation generator. Desriptions are optional.
 
 ```js
 wrestle.describe("Generate a random username")
@@ -118,6 +118,24 @@ wrestle.request.schema("post", {
 
 #### wrestle.define( _&lt;name>_, _&lt;value>_ )
 Define a variable for use within schemas or paths which can be accessed using the `:` prefix.
+
+```js
+wrestle.define("session_key", "asf6b98yf9869f69698mf9873");
+```
+
+#### wrestle.retrieve( _&lt;name> )
+Retrieve a variable name. I know retrieve is a odd name but the `get` namespace is taken up.
+
+```js
+wrestle.retrieve("session_key"); //"asf6b98yf9869f69698mf9873"
+```
+
+#### wrestle.format( _&lt;string>_ )
+Format a string that contains variables.
+
+```js
+wrestle.format("Using :session_key key"); //"Using asf6b98yf9869f69698mf9873 key"
+```
 
 ### Suite tools
 
@@ -175,7 +193,7 @@ Pause testing.
 Resume testing.
 
 ## Themes
-Wrestle can compile your API spec into some pretty informative documentation. It does this with a Mustache templating system. As is matures, more complex data will be passed into the documentation and maybe even a selection of templating engines but for now, it's fairly basic. Below is a table of all the variables passed into the theme. See the [Mustache.js documentation](https://github.com/janl/mustache.js/) for some help in theme formatting.
+Wrestle can compile your API spec into some pretty informative documentation. It does this with a Mustache templating system. As Wrestle matures, more complex data will be passed into the documentation and maybe even a selection of templating engines but for now, it's fairly basic. Below is a table of all the variables passed into the theme. See the [Mustache.js documentation](https://github.com/janl/mustache.js/) for some help in theme formatting.
 
 <table>
 	<tr>
